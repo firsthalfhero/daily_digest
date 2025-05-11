@@ -1,0 +1,117 @@
+family:
+  dad:
+    name: Dad
+    work_schedule: "part time 8:30am - 3pm"
+    meal_plan:
+      breakfast:
+        - Oats
+        - Oat meal
+        - Protein powder
+        - Creatine
+        - Mixed Berries
+      lunch:
+        - Chicken Breast
+        - Salad (Capsicum, Cucumber, Cabbage Red, Avocado, Four bean mix and Red Onion)
+        - Spicy mayonaise like Nandos Hot Perinaise
+        - Wraps
+      dinner:
+        - Strong & co refrigerated meals
+
+  mum:
+    name: Mum
+    weekend_preference: "likes to be included"
+    hobbies:
+      - running
+
+  henry:
+    name: Henry
+    age: 9
+    interests:
+      - soccer
+      - video games
+    meal_preference: meat_and_pasta
+    birthday_month: November
+
+  sophie:
+    name: Sophie
+    age: 6
+    meal_preference: no_specific_preferences
+    birthday_month: November
+
+meal_preferences:
+  general_likes:
+    - Spaghetti Bolognaise
+    - Pasta
+    - Creamy Chicken Pasta # Mac and cheese bake with chicken and pureed carrot and zucchini
+  specific_likes:
+    henry:
+      - BBQ pork buns
+      - wraps with chicken and cheese
+      - mayonnaise
+    sophie:
+      - wraps with chicken and cheese
+      - tomato sauce
+  general_dislikes:
+    - dessert # generally don't have
+  evening_meal_focus: "encourage vegetables"
+  meal_times:
+    - breakfast
+    - afternoon tea
+    - dinner
+  assumptions:
+    kids_breakfast: cereal
+    school_lunch:
+      prompt: "Are the kids at school this week? (yes/no)"
+      if_yes:
+        sophie:
+          lunch: "ham and cheese wrap, fruit, crackers"
+          recess: "fruit, crackers"
+        henry:
+          lunch: "chicken slices, mayo and cheese sandwich, fruit, crackers"
+          recess: "fruit, crackers"
+    lunch_meals:
+      - wraps
+      - sandwiches
+    reuse_meals: "minimise cooking by reusing meals across the week"
+
+grocery_staples:
+  - Bread
+  - Milk
+  - Wraps
+  - Fruit: # (Bananas, Strawberries, Grapes) - seasonal
+    - Bananas
+    - Strawberries
+    - Grapes
+  - Coconut Water
+  - Crackers
+  - Kids Snacks:
+    - Popcorn
+    - Grainwaves
+    - Sultanas
+
+this_weeks_meal_plan:
+  sunday:
+    dinner: "Roast Chicken with roasted vegetables (potatoes, carrots, sweet potatoes)"
+  monday:
+    dinner: "Spaghetti Bolognaise with a side salad"
+  tuesday:
+    dinner: "Creamy Chicken Pasta (with pureed carrot and zucchini)"
+  wednesday:
+    dinner: "Leftover Creamy Chicken Pasta with steamed broccoli"
+  thursday:
+    dinner: "Wraps with leftover chicken and cheese, cucumber and capsicum"
+
+output_preferences:
+  grocery_list_format:
+    style: "categorized_with_dishes"
+    description: "Grocery list is organized by category, with the name of the dish(es) requiring the ingredient listed in brackets next to the item. Multiple dishes are separated by a comma."
+  meal_plan_and_grocery_list_output:
+    format: "markdown"
+    order:
+      - "meal_plan"
+      - "grocery_list"
+
+activity_categories:
+  weekend:
+    - indoor
+    - outdoor
