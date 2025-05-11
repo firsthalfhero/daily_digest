@@ -8,6 +8,7 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
+from src.core.models.calendar import CalendarEvent, CalendarEventCollection
 from src.utils.config import APIConfig
 from src.utils.exceptions import MotionAPIError, retry_on_error
 from src.utils.logging import get_logger
@@ -55,22 +56,12 @@ class MotionClient:
         return session
 
     def _enforce_rate_limit(self) -> None:
-        """
-        Enforce rate limiting using the global rate limiter.
-        
-        This ensures we don't exceed 12 requests per minute across all instances
-        of MotionClient.
-        """
+        """Enforce rate limiting for API requests."""
         if not global_rate_limiter.acquire(wait=True):
-            # This should never happen with wait=True, but just in case
-            logger.error(
-                "rate_limit_exceeded",
-                current_usage=global_rate_limiter.get_current_usage(),
-            )
             raise MotionAPIError(
                 message="Rate limit exceeded",
                 status_code=429,
-                details={"rate_limit": "exceeded"},
+                details={"retry_after": global_rate_limiter.get_current_usage()[1]},
             )
 
     @retry_on_error(max_attempts=3, delay=1.0, backoff=2.0, exceptions=(requests.RequestException,))
@@ -82,19 +73,19 @@ class MotionClient:
         json: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """
-        Make a request to the Motion API with rate limiting and error handling.
+        Make a request to the Motion API.
         
         Args:
             method: HTTP method (GET, POST, etc.)
             endpoint: API endpoint path
             params: Optional query parameters
-            json: Optional JSON body for POST/PUT requests
+            json: Optional JSON request body
             
         Returns:
             Dict[str, Any]: API response data
             
         Raises:
-            MotionAPIError: If the API request fails
+            MotionAPIError: If the request fails
         """
         url = f"{self.config.motion_api_url.rstrip('/')}/{endpoint.lstrip('/')}"
         
@@ -152,7 +143,7 @@ class MotionClient:
         start_date: datetime,
         end_date: Optional[datetime] = None,
         calendar_id: Optional[str] = None,
-    ) -> List[Dict[str, Any]]:
+    ) -> CalendarEventCollection:
         """
         Get calendar events for a date range.
         
@@ -162,7 +153,7 @@ class MotionClient:
             calendar_id: Optional specific calendar ID
             
         Returns:
-            List[Dict[str, Any]]: List of calendar events
+            CalendarEventCollection: Collection of calendar events
             
         Raises:
             MotionAPIError: If the API request fails
@@ -185,7 +176,13 @@ class MotionClient:
                 params=params,
             )
             
-            return response.get("events", [])
+            # Convert API response to CalendarEvent objects
+            events = [
+                CalendarEvent.from_api_data(event_data)
+                for event_data in response.get("events", [])
+            ]
+            
+            return CalendarEventCollection(events)
             
         except MotionAPIError as e:
             logger.error(

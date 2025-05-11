@@ -30,6 +30,11 @@ class RateLimiter:
         self.timestamps: Deque[float] = deque()
         self.lock = Lock()
 
+    def reset(self) -> None:
+        """Reset the rate limiter by clearing all timestamps."""
+        with self.lock:
+            self.timestamps.clear()
+
     def _clean_old_timestamps(self, current_time: float) -> None:
         """Remove timestamps that are outside the current window."""
         cutoff_time = current_time - self.window_size

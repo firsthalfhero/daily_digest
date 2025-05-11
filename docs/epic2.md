@@ -163,31 +163,111 @@
 
 ### Story 2.5: Calendar Integration Testing
 
-- **User Story / Goal:** As a developer, I want comprehensive testing for calendar integration, so that I can ensure reliable operation.
+- **User Story / Goal:** As a developer, I want comprehensive testing for calendar integration, so that I can ensure reliable operation of all calendar components working together.
 
 - **Detailed Requirements:**
-  - Create unit tests
-  - Add integration tests
-  - Implement mock API responses
-  - Add error scenario testing
-  - Create performance tests
+  - Implement Motion API Client integration tests
+    - Authentication and token management
+    - API response handling
+    - Concurrent request handling
+  - Create Calendar Data Model integration tests
+    - End-to-end data flow validation
+    - Event collection operations
+    - Model relationship testing
+  - Develop Event Processing integration tests
+    - Event processing pipeline
+    - Event formatting validation
+    - Edge case handling
+  - Implement Timezone integration tests
+    - Timezone conversion validation
+    - Timezone-aware operations
+    - DST transition handling
+  - Create end-to-end integration tests
+    - Complete calendar workflow
+    - System behavior under load
+  - Set up test environment and documentation
+    - Test data management
+    - Environment configuration
+    - Test documentation
 
 - **Acceptance Criteria (ACs):**
-  - AC1: All components have unit tests
-  - AC2: Integration tests cover main flows
-  - AC3: Error scenarios are tested
-  - AC4: Performance meets requirements
-  - AC5: Test coverage is documented
+  - Motion API Client Testing
+    - AC1: Authentication and token management works correctly
+    - AC2: Rate limiting (12 requests/minute) functions properly
+    - AC3: Retry logic handles API failures appropriately
+    - AC4: Concurrent requests are handled safely
+  - Calendar Data Model Testing
+    - AC5: API response to model conversion is accurate
+    - AC6: Model validation rules are enforced
+    - AC7: Timezone conversions are correct
+    - AC8: Event collection operations work as expected
+  - Event Processing Testing
+    - AC9: Event filtering and sorting functions correctly
+    - AC10: Time-of-day grouping works accurately
+    - AC11: Event formatting is consistent
+    - AC12: Overlap detection functions properly
+  - Timezone Testing
+    - AC13: Sydney timezone handling is accurate
+    - AC14: DST transitions are handled correctly
+    - AC15: Timezone-aware operations work properly
+  - Performance Requirements
+    - AC16: API calls complete within 2 seconds
+    - AC17: Event processing completes within 1 second
+    - AC18: Timezone conversions complete within 100ms
+  - Test Coverage and Documentation
+    - AC19: Test coverage exceeds 90% for integration points
+    - AC20: All test scenarios are documented
+    - AC21: Test environment setup is documented
 
 - **Tasks:**
-  - [ ] Write unit tests
-  - [ ] Create integration tests
-  - [ ] Add mock responses
-  - [ ] Implement error tests
-  - [ ] Add performance tests
-  - [ ] Document test coverage
+  - [ ] Set up test environment
+    - [ ] Configure test environment variables
+    - [ ] Set up test logging
+    - [ ] Create test data sets
+  - [ ] Implement Motion API Client tests
+    - [ ] Write authentication tests
+    - [ ] Create rate limiting tests
+    - [ ] Add retry logic tests
+    - [ ] Implement concurrent request tests
+  - [ ] Create Calendar Data Model tests
+    - [ ] Write model conversion tests
+    - [ ] Add validation tests
+    - [ ] Create collection operation tests
+  - [ ] Develop Event Processing tests
+    - [ ] Write pipeline tests
+    - [ ] Add formatting tests
+    - [ ] Create edge case tests
+  - [ ] Implement Timezone tests
+    - [ ] Write conversion tests
+    - [ ] Add DST transition tests
+    - [ ] Create timezone-aware operation tests
+  - [ ] Create end-to-end tests
+    - [ ] Write workflow tests
+    - [ ] Add load testing
+    - [ ] Create error recovery tests
+  - [ ] Documentation
+    - [ ] Document test scenarios
+    - [ ] Create test data documentation
+    - [ ] Write environment setup guide
+    - [ ] Generate test coverage reports
 
 - **Dependencies:** Stories 2.1, 2.2, 2.3, 2.4
+
+- **Definition of Done:**
+  1. All acceptance criteria are met and verified
+  2. Test coverage exceeds 90% for integration points
+  3. All tests pass consistently
+  4. Performance requirements are met
+  5. Documentation is complete and up-to-date
+  6. Code review completed
+  7. No critical or high-priority bugs remain
+  8. Test environment is properly configured
+  9. CI/CD pipeline integration is complete
+
+- **Estimated Effort:**
+  - Medium (3-5 days)
+  - Complexity: Medium
+  - Risk: Low (all dependencies are complete)
 
 ## Change Log
 

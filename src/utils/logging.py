@@ -84,9 +84,7 @@ def setup_logging(config: Optional[Config] = None) -> BoundLogger:
         log_file=str(config.log_file),
         environment=config.env,
     )
-    
     return logger
-
 
 def get_logger(name: str) -> BoundLogger:
     """
