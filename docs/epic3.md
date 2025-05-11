@@ -11,13 +11,11 @@
 - Valid Weather API credentials
 - Understanding of Weather API endpoints and data structure
 - Sydney location coordinates
-- Weather data caching strategy
 
 ### Technical Components
 - Weather API client
 - Weather data models
 - Weather data processing
-- Weather data caching
 - Weather formatting utilities
 
 ## Local Testability & Command-Line Access
@@ -25,13 +23,11 @@
 ### Local Development
 - Mock Weather API responses
 - Local weather data for development
-- Weather data caching simulation
 - API rate limit simulation
 
 ### Command-Line Testing
 - Weather data retrieval testing
 - Weather processing validation
-- Cache hit/miss testing
 - API error simulation
 
 ### Environment Testing
@@ -173,47 +169,6 @@
 
 - **Dependencies:** Story 3.2
 
-### Story 3.4: Weather Data Caching
-
-- **User Story / Goal:** As a developer, I want to implement weather data caching, so that I can reduce API calls and improve performance.
-
-- **Detailed Requirements:**
-  - Implement multi-level caching mechanism (memory and persistent)
-  - Add cache invalidation with configurable TTL
-  - Create efficient cache storage with compression
-  - Implement cache refresh logic with background updates
-  - Add cache monitoring and metrics
-  - Create cache warming utilities
-  - Implement cache consistency checks
-  - Add cache error recovery
-  - Create cache performance optimization
-
-- **Acceptance Criteria (ACs):**
-  - AC1: Weather data is cached at multiple levels
-  - AC2: Cache is invalidated based on TTL and data freshness
-  - AC3: Cache storage is efficient with compression
-  - AC4: Cache refresh works correctly in background
-  - AC5: Cache performance is monitored and reported
-  - AC6: Cache warming improves initial load times
-  - AC7: Cache consistency is maintained
-  - AC8: Cache errors are handled gracefully
-  - AC9: Cache performance meets latency requirements
-
-- **Tasks:**
-  - [ ] Create multi-level caching system
-  - [ ] Implement TTL-based invalidation
-  - [ ] Add compressed storage mechanism
-  - [ ] Create background refresh logic
-  - [ ] Implement monitoring system
-  - [ ] Add cache warming utilities
-  - [ ] Create consistency checks
-  - [ ] Implement error recovery
-  - [ ] Add performance optimization
-  - [ ] Write cache tests
-  - [ ] Add cache documentation
-
-- **Dependencies:** Story 3.2
-
 ### Story 3.5: Weather Integration Testing
 
 - **User Story / Goal:** As a developer, I want comprehensive testing for weather integration, so that I can ensure reliable operation.
@@ -224,7 +179,6 @@
   - Implement realistic mock API responses
   - Add error scenario testing with edge cases
   - Create performance tests with benchmarks
-  - Add cache behavior testing
   - Implement load testing
   - Create security testing
   - Add resilience testing
@@ -235,12 +189,11 @@
   - AC2: Integration tests cover all main user flows
   - AC3: Error scenarios are thoroughly tested
   - AC4: Performance meets defined benchmarks
-  - AC5: Cache behavior is verified in all scenarios
-  - AC6: Load testing shows system stability
-  - AC7: Security testing passes all checks
-  - AC8: Resilience testing verifies recovery
-  - AC9: Monitoring tests confirm proper operation
-  - AC10: Test coverage is documented and maintained
+  - AC5: Load testing shows system stability
+  - AC6: Security testing passes all checks
+  - AC7: Resilience testing verifies recovery
+  - AC8: Monitoring tests confirm proper operation
+  - AC9: Test coverage is documented and maintained
 
 - **Tasks:**
   - [ ] Write comprehensive unit tests
@@ -248,7 +201,6 @@
   - [ ] Implement mock API system
   - [ ] Add error scenario tests
   - [ ] Create performance test suite
-  - [ ] Add cache behavior tests
   - [ ] Implement load testing
   - [ ] Add security tests
   - [ ] Create resilience tests
@@ -256,10 +208,11 @@
   - [ ] Document test coverage
   - [ ] Create test documentation
 
-- **Dependencies:** Stories 3.1, 3.2, 3.3, 3.4
+- **Dependencies:** Stories 3.1, 3.2, 3.3
 
 ## Change Log
 
 | Change | Date | Version | Description | Author |
 |--------|------|---------|-------------|---------|
-| Initial draft | 2024-03-19 | 0.1 | Initial epic creation | PM Agent | 
+| Initial draft | 2024-03-19 | 0.1 | Initial epic creation | PM Agent |
+| Cache removal | 2024-03-20 | 0.2 | Removed Story 3.4 (Weather Data Caching) | PM Agent | 

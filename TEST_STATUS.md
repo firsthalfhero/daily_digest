@@ -28,4 +28,6 @@ This file tracks the status of each test file. Update after each test run.
 | tests/integration/test_data_pipeline.py                      | Passed   | 2024-03-20      |
 | tests/unit/core/models/test_data_model.py                    | Passed   | 2024-03-20      |
 | tests/api/test_data_endpoints.py                            | Passed   | 2024-03-20      |
-| tests/integration/test_data_validation.py                    | xFail    | 2024-03-20      | 
+| tests/integration/test_data_validation.py                    | xFail    | 2024-03-20      |
+| tests/unit/core/clients/test_weather_client.py              | Added    | 2024-03-20      |
+| tests/unit/core/cache/test_weather_cache.py                 | Added    | 2024-03-20      | 

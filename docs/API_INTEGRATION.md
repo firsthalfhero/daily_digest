@@ -166,33 +166,138 @@ X-API-Key: {weather_api_key}
 
 ### 2.4 Data Processing
 ```python
-# Required Fields
+# Weather Data Models
+from src.core.models.weather import (
+    BaseWeatherModel,
+    Location,
+    CurrentWeather,
+    ForecastHour,
+    ForecastDay,
+    WeatherForecast,
+    WeatherAlert,
+    WeatherAlerts,
+    WeatherCondition,
+    AlertSeverity,
+    AlertType
+)
+
+# Model Usage Example
+location = Location(
+    city="Sydney",
+    region="NSW",
+    country="Australia",
+    latitude=-33.8688,
+    longitude=151.2093,
+    timezone="Australia/Sydney"
+)
+
+current_weather = CurrentWeather(
+    location=location,
+    temperature_c=22.5,
+    temperature_f=72.5,
+    feels_like_c=23.0,
+    feels_like_f=73.4,
+    humidity=65,
+    wind_speed_kmh=15.0,
+    wind_speed_mph=9.3,
+    wind_direction="SE",
+    precipitation_mm=0.0,
+    precipitation_inches=0.0,
+    uv_index=6.0,
+    condition=WeatherCondition.SUNNY
+)
+
+# Data Validation
+# - All models inherit from BaseWeatherModel
+# - Automatic unit conversion (C/F, mm/inches, km/h/mph)
+# - Timezone validation and conversion
+# - Coordinate validation (-90 to 90 lat, -180 to 180 lon)
+# - Chronological ordering for forecasts
+# - Alert overlap detection
+
+# Required Fields and Validation
 required_fields = {
-    'current': [
-        'temperature',
-        'conditions',
-        'precipitation'
+    'location': [
+        'city',
+        'latitude',
+        'longitude',
+        'timezone'
+    ],
+    'current_weather': [
+        'temperature_c',
+        'temperature_f',
+        'humidity',
+        'wind_speed_kmh',
+        'wind_speed_mph',
+        'condition'
     ],
     'forecast': [
-        'time',
-        'temperature',
-        'conditions'
+        'date',
+        'max_temp_c',
+        'min_temp_c',
+        'condition',
+        'hourly_forecasts'
+    ],
+    'alert': [
+        'alert_type',
+        'severity',
+        'title',
+        'start_time',
+        'end_time'
     ]
 }
 
-# Weather Conditions Mapping
+# Weather Conditions
 weather_conditions = {
-    'Sunny': '☀️',
-    'Partly Cloudy': '⛅',
-    'Cloudy': '☁️',
-    'Rain': '🌧️',
-    'Thunderstorm': '⛈️'
+    'SUNNY': '☀️',
+    'PARTLY_CLOUDY': '⛅',
+    'CLOUDY': '☁️',
+    'RAIN': '🌧️',
+    'THUNDERSTORM': '⛈️',
+    'SNOW': '❄️',
+    'FOG': '🌫️',
+    'WINDY': '💨'
 }
 
-# Temperature Formatting
-# - Round to nearest whole number
-# - Include unit (°C)
-# - Format: "22°C"
+# Alert Types and Severity
+alert_types = {
+    'RAIN': 'Rain Warning',
+    'WIND': 'Wind Warning',
+    'THUNDERSTORM': 'Thunderstorm Warning',
+    'FLOOD': 'Flood Warning',
+    'FIRE': 'Fire Warning'
+}
+
+alert_severity = {
+    'MINOR': 'Minor',
+    'MODERATE': 'Moderate',
+    'SEVERE': 'Severe',
+    'EXTREME': 'Extreme'
+}
+
+# Data Processing Guidelines
+# 1. Location Processing
+#    - Validate coordinates
+#    - Verify timezone
+#    - Format city/region names
+#
+# 2. Current Weather
+#    - Convert temperatures (C/F)
+#    - Convert precipitation (mm/inches)
+#    - Convert wind speeds (km/h/mph)
+#    - Validate observation time
+#
+# 3. Forecast Processing
+#    - Ensure chronological order
+#    - Validate temperature ranges
+#    - Check sunrise/sunset times
+#    - Process hourly forecasts
+#
+# 4. Alert Processing
+#    - Check for overlapping alerts
+#    - Validate time periods
+#    - Group by severity
+#    - Sort by start time
 ```
 
 ## 3. Implementation Guidelines
