@@ -2,18 +2,22 @@
 
 ## 1. Motion API Integration
 
-### 1.1 Authentication
+### 1.1 Authentication and Configuration
 ```python
 # Authentication Method: Bearer Token
 # Stored in: AWS Secrets Manager
 # Key Path: /digest/{env}/motion-api-key
+
+# API URL Configuration
+# Stored in: Environment Variable
+# Variable Name: MOTION_API_URL
 ```
 
 ### 1.2 Endpoints
 
 #### Calendar Events
 ```python
-# Endpoint: https://api.motion.com/v1/calendar/events
+# Endpoint: {MOTION_API_URL}/calendar/events
 # Method: GET
 # Parameters:
 #   - start_date: YYYY-MM-DD (required)
@@ -21,7 +25,7 @@
 #   - timezone: Australia/Sydney (required)
 
 # Example Request
-GET /v1/calendar/events?start_date=2024-03-20&end_date=2024-03-20&timezone=Australia/Sydney
+GET /calendar/events?start_date=2024-03-20&end_date=2024-03-20&timezone=Australia/Sydney
 Authorization: Bearer {motion_api_key}
 
 # Example Response

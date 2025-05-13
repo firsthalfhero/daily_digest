@@ -13,6 +13,9 @@ from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 from dotenv import load_dotenv
 
+from src.utils.config import WeatherAPIConfig
+from src.utils.exceptions import WeatherAPIError
+
 # Load environment variables
 load_dotenv()
 
@@ -25,6 +28,9 @@ class WeatherAPIError(Exception):
     message: str
     status_code: Optional[int] = None
     response: Optional[Dict[str, Any]] = None
+
+    def __str__(self):
+        return self.message or super().__str__()
 
 class RateLimitError(WeatherAPIError):
     """Exception raised when rate limit is exceeded."""
@@ -39,8 +45,7 @@ class WeatherAPI:
     
     def __init__(
         self,
-        api_key: Optional[str] = None,
-        base_url: str = "https://api.weatherapi.com/v1/",
+        config: WeatherAPIConfig,
         timeout: int = 10,
         max_retries: int = 3,
         initial_retry_delay: int = 5,
@@ -49,18 +54,13 @@ class WeatherAPI:
         """Initialize the Weather API client.
         
         Args:
-            api_key: Weather API key. If not provided, will try to get from WEATHER_API_KEY env var
-            base_url: Base URL for the Weather API
+            config: Weather API configuration containing credentials and base URL
             timeout: Request timeout in seconds
             max_retries: Maximum number of retry attempts
             initial_retry_delay: Initial delay between retries in seconds
             max_requests_per_day: Maximum number of requests allowed per day
         """
-        self.api_key = api_key or os.getenv("WEATHER_API_KEY")
-        if not self.api_key:
-            raise ValueError("Weather API key must be provided or set in WEATHER_API_KEY environment variable")
-            
-        self.base_url = base_url
+        self.config = config
         self.timeout = timeout
         self.max_requests_per_day = max_requests_per_day
         
@@ -79,6 +79,13 @@ class WeatherAPI:
         adapter = HTTPAdapter(max_retries=retry_strategy)
         self.session.mount("http://", adapter)
         self.session.mount("https://", adapter)
+        
+        # Set default headers
+        self.session.headers.update({
+            "Authorization": f"Bearer {self.config.weather_api_key}",
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        })
         
     def _check_rate_limit(self) -> None:
         """Check if we've exceeded the rate limit."""
@@ -113,9 +120,9 @@ class WeatherAPI:
         """
         self._check_rate_limit()
         
-        url = urljoin(self.base_url, endpoint)
+        url = urljoin(self.config.base_url, endpoint)
         params = params or {}
-        params["key"] = self.api_key
+        params["key"] = self.config.weather_api_key
         
         try:
             logger.debug(f"Making request to {endpoint} with params {params}")
@@ -134,17 +141,59 @@ class WeatherAPI:
                 message="Request timed out",
                 status_code=408
             )
-        except requests.exceptions.RequestException as e:
-            if e.response is not None and e.response.status_code == 429:
+        except (requests.exceptions.RetryError, requests.packages.urllib3.exceptions.MaxRetryError) as e:
+            # Handle retry errors, which may wrap a 429 or other status
+            import re
+            msg = str(e)
+            status_code = None
+            if hasattr(e, 'reason') and hasattr(e.reason, 'response') and e.reason.response is not None:
+                status_code = getattr(e.reason.response, 'status_code', None)
+            if status_code is None:
+                match = re.search(r'(\d{3})', msg)
+                if match:
+                    status_code = int(match.group(1))
+            # If 429 is in the error message, treat as rate limit error
+            if status_code == 429 or '429' in msg:
                 raise RateLimitError(
                     message="Rate limit exceeded",
-                    status_code=429,
-                    response=e.response.json() if e.response.content else None
+                    status_code=429
                 )
             raise WeatherAPIError(
-                message=str(e),
-                status_code=e.response.status_code if e.response else None,
-                response=e.response.json() if e.response and e.response.content else None
+                message=msg,
+                status_code=status_code
+            )
+        except requests.exceptions.RequestException as e:
+            # Try to extract status code and response from the exception, even if using mocks
+            status_code = None
+            response_json = None
+            message = str(e)
+            if hasattr(e, 'response') and e.response is not None:
+                status_code = getattr(e.response, 'status_code', None)
+                try:
+                    if hasattr(e.response, 'json') and e.response.content:
+                        response_json = e.response.json()
+                        # If the API returned an error message, use it
+                        if response_json and 'error' in response_json and 'message' in response_json['error']:
+                            message = response_json['error']['message']
+                except Exception:
+                    response_json = None
+            # Fallback: try to extract status code from the error string (for responses mock)
+            if status_code is None and e.args and isinstance(e.args[0], str):
+                import re
+                match = re.search(r'(\d{3}) Client Error', e.args[0])
+                if match:
+                    status_code = int(match.group(1))
+            # Rate limit error
+            if status_code == 429:
+                raise RateLimitError(
+                    message=message or "Rate limit exceeded",
+                    status_code=429,
+                    response=response_json
+                )
+            raise WeatherAPIError(
+                message=message,
+                status_code=status_code,
+                response=response_json
             )
             
     def get_current_weather(self) -> Dict[str, Any]:

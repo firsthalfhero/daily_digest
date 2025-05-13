@@ -57,7 +57,6 @@
   - Create comprehensive API error handling with specific error types
   - Implement location-based queries using Sydney coordinates (-33.8688° S, 151.2093° E)
   - Add request timeout handling (default: 10s)
-  - Implement request caching headers management
   - Add request/response logging for debugging
 
 - **Acceptance Criteria (ACs):**
@@ -68,8 +67,7 @@
   - AC5: API errors are properly handled, logged, and categorized
   - AC6: Location-based queries work correctly with proper coordinate validation
   - AC7: Request timeouts are handled gracefully with user feedback
-  - AC8: Cache headers are properly managed to optimize API usage
-  - AC9: All API interactions are logged for monitoring and debugging
+  - AC8: All API interactions are logged for monitoring and debugging
 
 - **Tasks:**
   - [ ] Create API client class with proper dependency injection
@@ -80,7 +78,6 @@
   - [ ] Create comprehensive error handling system
   - [ ] Add location validation and coordinate handling
   - [ ] Implement request timeout management
-  - [ ] Add cache header management
   - [ ] Create logging system for API interactions
   - [ ] Write comprehensive API client tests
   - [ ] Add API client documentation

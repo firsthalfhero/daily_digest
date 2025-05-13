@@ -6,10 +6,10 @@ This file tracks the status of each test file. Update after each test run.
 
 | Test File                                                    | Status   | Last Run        |
 |--------------------------------------------------------------|----------|-----------------|
-| tests/utils/test_logging.py                                  | Unknown  | Not yet run     |
-| tests/utils/test_config.py                                   | Unknown  | Not yet run     |
-| tests/utils/test_exceptions.py                               | Unknown  | Not yet run     |
-| tests/integration/test_error_handling.py                     | Unknown  | Not yet run     |
+| tests/utils/test_logging.py                                  | Not Found | 2024-06-09      |
+| tests/utils/test_config.py                                   | Failed    | 2024-06-09      |
+| tests/utils/test_exceptions.py                               | Not Found | 2024-06-09      |
+| tests/integration/test_error_handling.py                     | Not Found | 2024-06-09      |
 
 ## Epic 2 (Calendar Integration) Tests
 
@@ -30,4 +30,5 @@ This file tracks the status of each test file. Update after each test run.
 | tests/api/test_data_endpoints.py                            | Passed   | 2024-03-20      |
 | tests/integration/test_data_validation.py                    | xFail    | 2024-03-20      |
 | tests/unit/core/clients/test_weather_client.py              | Added    | 2024-03-20      |
-| tests/unit/core/cache/test_weather_cache.py                 | Added    | 2024-03-20      | 
+| tests/unit/core/cache/test_weather_cache.py                 | Added    | 2024-03-20      |
+| tests/scripts/test_get_tasks.py | 6 Passed, 1 xFail | 2024-05-13 | 

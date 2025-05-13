@@ -1,15 +1,15 @@
-"""Motion API client for retrieving calendar data."""
+"""Motion API client for retrieving task data."""
 
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-from src.core.models.calendar import CalendarEvent, CalendarEventCollection
-from src.utils.config import APIConfig
+from src.core.models.task import Task, TaskCollection
+from src.utils.config import MotionAPIConfig
 from src.utils.exceptions import MotionAPIError, retry_on_error
 from src.utils.logging import get_logger
 from src.utils.rate_limiter import global_rate_limiter
@@ -20,15 +20,16 @@ logger = get_logger(__name__)
 class MotionClient:
     """Client for interacting with the Motion API."""
 
-    def __init__(self, config: APIConfig):
+    def __init__(self, config: MotionAPIConfig):
         """
         Initialize the Motion API client.
         
         Args:
-            config: API configuration containing credentials and base URL.
+            config: Motion API configuration containing credentials and base URL.
         """
         self.config = config
         self.session = self._create_session()
+        print(f"[DEBUG] Using API Key: {self.config.motion_api_key[:8]}...")
 
     def _create_session(self) -> requests.Session:
         """Create a requests session with retry logic."""
@@ -48,8 +49,7 @@ class MotionClient:
         
         # Set default headers
         session.headers.update({
-            "Authorization": f"Bearer {self.config.motion_api_key}",
-            "Content-Type": "application/json",
+            "X-API-Key": self.config.motion_api_key,
             "Accept": "application/json",
         })
         
@@ -138,68 +138,73 @@ class MotionClient:
                 cause=e,
             )
 
-    def get_calendar_events(
+    def get_tasks(
         self,
-        start_date: datetime,
-        end_date: Optional[datetime] = None,
-        calendar_id: Optional[str] = None,
-    ) -> CalendarEventCollection:
+        project_id: Optional[str] = None,
+        status: Optional[str] = None,
+        assignee_id: Optional[str] = None,
+        due_date: Optional[datetime] = None,
+    ) -> TaskCollection:
         """
-        Get calendar events for a date range.
+        Get tasks from Motion API.
         
         Args:
-            start_date: Start date for event retrieval
-            end_date: Optional end date (defaults to start_date + 1 day)
-            calendar_id: Optional specific calendar ID
+            project_id: Optional project ID to filter tasks
+            status: Optional status to filter tasks
+            assignee_id: Optional assignee ID to filter tasks
+            due_date: Optional due date to filter tasks
             
         Returns:
-            CalendarEventCollection: Collection of calendar events
+            TaskCollection: Collection of tasks
             
         Raises:
             MotionAPIError: If the API request fails
         """
-        if end_date is None:
-            end_date = start_date + timedelta(days=1)
-        
-        params = {
-            "start": start_date.isoformat(),
-            "end": end_date.isoformat(),
-        }
-        
-        if calendar_id:
-            params["calendar_id"] = calendar_id
+        params = {}
+        if project_id:
+            params["project_id"] = project_id
+        if status:
+            params["status"] = status
+        if assignee_id:
+            params["assignee_id"] = assignee_id
+        if due_date:
+            params["due_date"] = due_date.isoformat()
         
         try:
             response = self._make_request(
                 method="GET",
-                endpoint="/events",
+                endpoint="/tasks",
                 params=params,
             )
             
-            # Convert API response to CalendarEvent objects
-            events = [
-                CalendarEvent.from_api_data(event_data)
-                for event_data in response.get("events", [])
+            # Convert API response to Task objects
+            tasks = [
+                Task.from_api_data(task_data)
+                for task_data in response.get("tasks", [])
             ]
             
-            return CalendarEventCollection(events)
+            return TaskCollection(tasks=tasks)
             
         except MotionAPIError as e:
             logger.error(
-                "failed_to_get_calendar_events",
-                start_date=start_date.isoformat(),
-                end_date=end_date.isoformat(),
-                calendar_id=calendar_id,
+                "failed_to_get_tasks",
+                project_id=project_id,
+                status=status,
+                assignee_id=assignee_id,
+                due_date=due_date.isoformat() if due_date else None,
                 error=str(e),
             )
             raise
 
-    def get_calendars(self) -> List[Dict[str, Any]]:
+    def get_task(self, task_id: str) -> Task:
         """
-        Get list of available calendars.
+        Get a single task by ID.
         
+        Args:
+            task_id: ID of the task to retrieve
+            
         Returns:
-            List[Dict[str, Any]]: List of calendars
+            Task: The requested task
             
         Raises:
             MotionAPIError: If the API request fails
@@ -207,14 +212,138 @@ class MotionClient:
         try:
             response = self._make_request(
                 method="GET",
-                endpoint="/calendars",
+                endpoint=f"/tasks/{task_id}",
             )
             
-            return response.get("calendars", [])
+            return Task.from_api_data(response)
             
         except MotionAPIError as e:
             logger.error(
-                "failed_to_get_calendars",
+                "failed_to_get_task",
+                task_id=task_id,
+                error=str(e),
+            )
+            raise
+
+    def create_task(self, task_data: Dict[str, Any]) -> Task:
+        """
+        Create a new task.
+        
+        Args:
+            task_data: Task data to create
+            
+        Returns:
+            Task: The created task
+            
+        Raises:
+            MotionAPIError: If the API request fails
+        """
+        try:
+            response = self._make_request(
+                method="POST",
+                endpoint="/tasks",
+                json=task_data,
+            )
+            
+            return Task.from_api_data(response)
+            
+        except MotionAPIError as e:
+            logger.error(
+                "failed_to_create_task",
+                task_data=task_data,
+                error=str(e),
+            )
+            raise
+
+    def update_task(self, task_id: str, task_data: Dict[str, Any]) -> Task:
+        """
+        Update an existing task.
+        
+        Args:
+            task_id: ID of the task to update
+            task_data: Updated task data
+            
+        Returns:
+            Task: The updated task
+            
+        Raises:
+            MotionAPIError: If the API request fails
+        """
+        try:
+            response = self._make_request(
+                method="PUT",
+                endpoint=f"/tasks/{task_id}",
+                json=task_data,
+            )
+            
+            return Task.from_api_data(response)
+            
+        except MotionAPIError as e:
+            logger.error(
+                "failed_to_update_task",
+                task_id=task_id,
+                task_data=task_data,
+                error=str(e),
+            )
+            raise
+
+    def delete_task(self, task_id: str) -> None:
+        """
+        Delete a task.
+        
+        Args:
+            task_id: ID of the task to delete
+            
+        Raises:
+            MotionAPIError: If the API request fails
+        """
+        try:
+            self._make_request(
+                method="DELETE",
+                endpoint=f"/tasks/{task_id}",
+            )
+            
+        except MotionAPIError as e:
+            logger.error(
+                "failed_to_delete_task",
+                task_id=task_id,
+                error=str(e),
+            )
+            raise
+
+    def get_tasks_scheduled_for_today(self, params: dict = None) -> TaskCollection:
+        """
+        Get tasks scheduled for today from Motion API, or for a custom date if params['due_date'] is provided.
+        If params is provided, pass it to the API request.
+        """
+        try:
+            if params is not None:
+                response = self._make_request(
+                    method="GET",
+                    endpoint="/tasks",
+                    params=params,
+                )
+                tasks = [
+                    Task.from_api_data(task_data)
+                    for task_data in response.get("tasks", [])
+                ]
+                return TaskCollection(tasks=tasks)
+            else:
+                # Get all tasks (we'll filter client-side)
+                response = self._make_request(
+                    method="GET",
+                    endpoint="/tasks",
+                )
+                tasks = [
+                    Task.from_api_data(task_data)
+                    for task_data in response.get("tasks", [])
+                ]
+                all_tasks = TaskCollection(tasks=tasks)
+                today = datetime.now(timezone.utc)
+                return all_tasks.filter_by_scheduled_date(today)
+        except MotionAPIError as e:
+            logger.error(
+                "failed_to_get_today_tasks",
                 error=str(e),
             )
             raise 

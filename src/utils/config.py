@@ -14,17 +14,22 @@ from dotenv import load_dotenv
 
 
 @dataclass
-class APIConfig:
-    """Configuration for external APIs."""
+class MotionAPIConfig:
+    """Configuration for Motion API only."""
     motion_api_key: str
     motion_api_url: str
+
+
+@dataclass
+class WeatherAPIConfig:
+    """Configuration for Weather API only."""
     weather_api_key: str
     weather_api_url: str
 
 
 @dataclass
 class EmailConfig:
-    """Configuration for email delivery."""
+    """Configuration for email settings."""
     smtp_host: str
     smtp_port: int
     smtp_username: str
@@ -41,8 +46,8 @@ class Config:
     debug: bool
     
     # APIs
-    motion: APIConfig
-    weather: APIConfig
+    motion: MotionAPIConfig
+    weather: WeatherAPIConfig
     
     # Email
     email: EmailConfig
@@ -78,9 +83,11 @@ def load_config() -> Config:
             debug=os.getenv("DEBUG", "false").lower() == "true",
             
             # APIs
-            motion=APIConfig(
+            motion=MotionAPIConfig(
                 motion_api_key=_get_required_env("MOTION_API_KEY"),
                 motion_api_url=_get_required_env("MOTION_API_URL"),
+            ),
+            weather=WeatherAPIConfig(
                 weather_api_key=_get_required_env("WEATHER_API_KEY"),
                 weather_api_url=_get_required_env("WEATHER_API_URL"),
             ),
