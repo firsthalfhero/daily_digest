@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Optional
 
 from dotenv import load_dotenv
+from src.utils.exceptions import ConfigurationError
 
 
 @dataclass
@@ -18,6 +19,11 @@ class MotionAPIConfig:
     """Configuration for Motion API only."""
     motion_api_key: str
     motion_api_url: str
+    def __post_init__(self):
+        if not self.motion_api_key or not self.motion_api_url:
+            raise ConfigurationError("Empty configuration value in MotionAPIConfig")
+        if not self.motion_api_url.startswith(("http://", "https://")):
+            raise ConfigurationError("Invalid API URL in MotionAPIConfig")
 
 
 @dataclass
@@ -25,6 +31,11 @@ class WeatherAPIConfig:
     """Configuration for Weather API only."""
     weather_api_key: str
     weather_api_url: str
+    def __post_init__(self):
+        if not self.weather_api_key or not self.weather_api_url:
+            raise ConfigurationError("Empty configuration value in WeatherAPIConfig")
+        if not self.weather_api_url.startswith(("http://", "https://")):
+            raise ConfigurationError("Invalid API URL in WeatherAPIConfig")
 
 
 @dataclass
@@ -60,70 +71,67 @@ class Config:
     log_file: Path
 
 
-def load_config() -> Config:
+def load_config(env_prefix: str = "", env_file: Optional[str] = None) -> Config:
     """
     Load configuration from environment variables.
-    
-    Returns:
-        Config: Validated configuration object.
-        
-    Raises:
-        ValueError: If required configuration is missing or invalid.
+    Args:
+        env_prefix: Optional prefix for environment variables.
+        env_file: Optional path to a .env file to load.
     """
-    # Load .env file if it exists
-    env_path = Path(".env")
-    if env_path.exists():
-        load_dotenv(env_path)
-    
-    # Validate and load configuration
+    if env_file:
+        env_path = Path(env_file)
+        if env_path.exists():
+            load_dotenv(env_path)
+    def get_env(key: str) -> str:
+        return _get_required_env(f"{env_prefix}{key}")
+    # Check for all required environment variables before instantiating Config
+    required_keys = [
+        "MOTION_API_KEY", "MOTION_API_URL",
+        "WEATHER_API_KEY", "WEATHER_API_URL",
+        "SMTP_HOST", "SMTP_PORT", "SMTP_USERNAME", "SMTP_PASSWORD",
+        "SENDER_EMAIL", "RECIPIENT_EMAIL"
+    ]
+    missing_vars = [f"{env_prefix}{key}" for key in required_keys if not os.getenv(f"{env_prefix}{key}")]
+    if missing_vars:
+        raise ConfigurationError(
+            f"Required environment variable(s) {', '.join(missing_vars)} is not set",
+            details={"missing_vars": missing_vars}
+        )
     try:
         config = Config(
-            # Environment
-            env=os.getenv("ENV", "development"),
-            debug=os.getenv("DEBUG", "false").lower() == "true",
-            
-            # APIs
+            env=os.getenv(f"{env_prefix}ENV", "development"),
+            debug=os.getenv(f"{env_prefix}DEBUG", "false").lower() == "true",
             motion=MotionAPIConfig(
-                motion_api_key=_get_required_env("MOTION_API_KEY"),
-                motion_api_url=_get_required_env("MOTION_API_URL"),
+                motion_api_key=get_env("MOTION_API_KEY"),
+                motion_api_url=get_env("MOTION_API_URL"),
             ),
             weather=WeatherAPIConfig(
-                weather_api_key=_get_required_env("WEATHER_API_KEY"),
-                weather_api_url=_get_required_env("WEATHER_API_URL"),
+                weather_api_key=get_env("WEATHER_API_KEY"),
+                weather_api_url=get_env("WEATHER_API_URL"),
             ),
-            
-            # Email
             email=EmailConfig(
-                smtp_host=_get_required_env("SMTP_HOST"),
-                smtp_port=int(_get_required_env("SMTP_PORT")),
-                smtp_username=_get_required_env("SMTP_USERNAME"),
-                smtp_password=_get_required_env("SMTP_PASSWORD"),
-                sender_email=_get_required_env("SENDER_EMAIL"),
-                recipient_email=_get_required_env("RECIPIENT_EMAIL"),
+                smtp_host=get_env("SMTP_HOST"),
+                smtp_port=int(get_env("SMTP_PORT")),
+                smtp_username=get_env("SMTP_USERNAME"),
+                smtp_password=get_env("SMTP_PASSWORD"),
+                sender_email=get_env("SENDER_EMAIL"),
+                recipient_email=get_env("RECIPIENT_EMAIL"),
             ),
-            
-            # AWS
-            aws_region=os.getenv("AWS_REGION", "ap-southeast-2"),
-            
-            # Logging
-            log_level=os.getenv("LOG_LEVEL", "INFO"),
-            log_file=Path(os.getenv("LOG_FILE", "logs/daily_digest.log")),
+            aws_region=os.getenv(f"{env_prefix}AWS_REGION", "ap-southeast-2"),
+            log_level=os.getenv(f"{env_prefix}LOG_LEVEL", "INFO"),
+            log_file=Path(os.getenv(f"{env_prefix}LOG_FILE", "logs/daily_digest.log")),
         )
-        
-        # Validate configuration
         _validate_config(config)
-        
         return config
-        
     except Exception as e:
-        raise ValueError(f"Failed to load configuration: {str(e)}")
+        raise ConfigurationError(f"Failed to load configuration: {str(e)}")
 
 
 def _get_required_env(key: str) -> str:
     """Get a required environment variable."""
     value = os.getenv(key)
     if not value:
-        raise ValueError(f"Required environment variable {key} is not set")
+        raise ConfigurationError(f"Required environment variable {key} is not set", details={"missing_vars": [key]})
     return value
 
 
@@ -131,23 +139,23 @@ def _validate_config(config: Config) -> None:
     """Validate the configuration."""
     # Validate email configuration
     if not config.email.sender_email or "@" not in config.email.sender_email:
-        raise ValueError("Invalid sender email address")
+        raise ConfigurationError("Invalid sender email address")
     if not config.email.recipient_email or "@" not in config.email.recipient_email:
-        raise ValueError("Invalid recipient email address")
+        raise ConfigurationError("Invalid recipient email address")
     
     # Validate API URLs
     if not config.motion.motion_api_url.startswith(("http://", "https://")):
-        raise ValueError("Invalid Motion API URL")
+        raise ConfigurationError("Invalid Motion API URL")
     if not config.weather.weather_api_url.startswith(("http://", "https://")):
-        raise ValueError("Invalid Weather API URL")
+        raise ConfigurationError("Invalid Weather API URL")
     
     # Validate log level
     valid_log_levels = {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}
     if config.log_level.upper() not in valid_log_levels:
-        raise ValueError(f"Invalid log level. Must be one of: {valid_log_levels}")
+        raise ConfigurationError(f"Invalid log level. Must be one of: {valid_log_levels}")
 
 
-def create_config_template() -> None:
+def create_config_template(directory: Optional[Path] = None) -> None:
     """Create a template .env file if it doesn't exist."""
     template = """# Environment
 ENV=development
@@ -176,8 +184,10 @@ AWS_REGION=ap-southeast-2
 LOG_LEVEL=INFO
 LOG_FILE=logs/daily_digest.log
 """
-    
-    env_path = Path(".env.template")
+    if directory is None:
+        env_path = Path(".env.template")
+    else:
+        env_path = Path(directory) / ".env.template"
     if not env_path.exists():
         env_path.write_text(template)
         print(f"Created configuration template at {env_path}")

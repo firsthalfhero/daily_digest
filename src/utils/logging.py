@@ -43,6 +43,22 @@ def setup_logging(config: Optional[Config] = None) -> BoundLogger:
         level=config.log_level,
     )
     
+    # Set up file handler with rotation
+    file_handler = logging.handlers.RotatingFileHandler(
+        filename=config.log_file,
+        maxBytes=10 * 1024 * 1024,  # 10MB
+        backupCount=5,
+        encoding="utf-8",
+    )
+    file_handler.setFormatter(logging.Formatter("%(message)s"))
+    file_handler.setLevel(logging.DEBUG)  # Ensure all log levels are written
+
+    # Add file handler to the 'daily_digest' logger only
+    logger = logging.getLogger("daily_digest")
+    logger.addHandler(file_handler)
+    logger.setLevel(logging.DEBUG)
+    logger.propagate = False
+
     # Configure structlog
     structlog.configure(
         processors=[
@@ -61,30 +77,18 @@ def setup_logging(config: Optional[Config] = None) -> BoundLogger:
         wrapper_class=structlog.stdlib.BoundLogger,
         cache_logger_on_first_use=True,
     )
-    
-    # Set up file handler with rotation
-    file_handler = logging.handlers.RotatingFileHandler(
-        filename=config.log_file,
-        maxBytes=10 * 1024 * 1024,  # 10MB
-        backupCount=5,
-        encoding="utf-8",
-    )
-    file_handler.setFormatter(logging.Formatter("%(message)s"))
-    
-    # Add file handler to root logger
-    logging.getLogger().addHandler(file_handler)
-    
+
     # Create and return a bound logger
-    logger = structlog.get_logger("daily_digest")
-    
+    bound_logger = structlog.get_logger("daily_digest")
+
     # Log initial configuration
-    logger.info(
+    bound_logger.info(
         "logging_initialized",
         log_level=config.log_level,
         log_file=str(config.log_file),
         environment=config.env,
     )
-    return logger
+    return bound_logger
 
 def get_logger(name: str) -> BoundLogger:
     """

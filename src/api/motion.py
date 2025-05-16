@@ -9,6 +9,7 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
 from src.core.models.task import Task, TaskCollection
+from src.core.models.calendar import CalendarEvent, CalendarEventCollection
 from src.utils.config import MotionAPIConfig
 from src.utils.exceptions import MotionAPIError, retry_on_error
 from src.utils.logging import get_logger
@@ -344,6 +345,43 @@ class MotionClient:
         except MotionAPIError as e:
             logger.error(
                 "failed_to_get_today_tasks",
+                error=str(e),
+            )
+            raise
+
+    def get_calendar_events(self, start_date: datetime, end_date: datetime = None) -> 'CalendarEventCollection':
+        """
+        Get calendar events from the Motion API for a given date range.
+        Args:
+            start_date: The start date for events (required)
+            end_date: The end date for events (optional, defaults to start_date + 1 day)
+        Returns:
+            CalendarEventCollection: Collection of calendar events
+        Raises:
+            MotionAPIError: If the API request fails
+        """
+        if end_date is None:
+            end_date = start_date + timedelta(days=1)
+        params = {
+            "start": start_date.isoformat(),
+            "end": end_date.isoformat(),
+        }
+        try:
+            response = self._make_request(
+                method="GET",
+                endpoint="/events",
+                params=params,
+            )
+            events = [
+                CalendarEvent.from_api_data(event_data)
+                for event_data in response.get("events", [])
+            ]
+            return CalendarEventCollection(events)
+        except MotionAPIError as e:
+            logger.error(
+                "failed_to_get_calendar_events",
+                start_date=start_date.isoformat(),
+                end_date=end_date.isoformat(),
                 error=str(e),
             )
             raise 

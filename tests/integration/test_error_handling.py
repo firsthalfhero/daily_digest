@@ -12,7 +12,7 @@ from src.utils.exceptions import (
 )
 from src.api.motion import MotionClient
 from src.api.weather import WeatherClient
-from src.email.sender import EmailSender
+from src.digest_email.sender import EmailSender
 
 
 @pytest.fixture

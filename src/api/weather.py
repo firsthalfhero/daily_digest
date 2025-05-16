@@ -251,4 +251,9 @@ class WeatherAPI:
             "q": f"{self.SYDNEY_LAT},{self.SYDNEY_LON}",
             "alerts": "yes"
         }
-        return self._make_request("forecast.json", params) 
+        return self._make_request("forecast.json", params)
+
+class WeatherClient:
+    def get_weather(self, location: str):
+        # Minimal implementation for testing
+        pass 

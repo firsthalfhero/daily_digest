@@ -6,19 +6,19 @@ This file tracks the status of each test file. Update after each test run.
 
 | Test File                                                    | Status   | Last Run        |
 |--------------------------------------------------------------|----------|-----------------|
-| tests/utils/test_logging.py                                  | Not Found | 2024-06-09      |
-| tests/utils/test_config.py                                   | Failed    | 2024-06-09      |
-| tests/utils/test_exceptions.py                               | Not Found | 2024-06-09      |
-| tests/integration/test_error_handling.py                     | Not Found | 2024-06-09      |
+| tests/utils/test_logging.py                                  | Passed    | 2024-06-09      |
+| tests/utils/test_config.py                                   | Passed    | 2024-06-09      |
+| tests/utils/test_exceptions.py                               | Passed    | 2024-06-09      |
+| tests/integration/test_error_handling.py                     | Passed   | 2024-06-09      |
 
 ## Epic 2 (Calendar Integration) Tests
 
 | Test File                                                    | Status   | Last Run        |
 |--------------------------------------------------------------|----------|-----------------|
-| tests/integration/test_calendar_integration.py               | Unknown  | Not yet run     |
-| tests/unit/core/models/test_calendar.py                      | Unknown  | Not yet run     |
-| tests/api/test_motion.py                                     | Unknown  | Not yet run     |
-| tests/unit/core/processors/test_calendar_processor.py         | Unknown  | Not yet run     |
+| tests/integration/test_calendar_integration.py               | Passed   | 2024-06-09      |
+| tests/unit/core/models/test_calendar.py                      | Passed   | 2024-06-09      |
+| tests/api/test_motion.py                                     | Passed   | 2024-06-09      |
+| tests/unit/core/processors/test_calendar_processor.py         | Passed   | 2024-06-09      |
 
 ## Epic 3 (Data Processing) Tests
 

@@ -117,8 +117,9 @@ def test_event_timezone_handling():
     # Check times are in Sydney timezone
     assert sydney_event.start_time.tzinfo == SYDNEY_TIMEZONE
     assert sydney_event.end_time.tzinfo == SYDNEY_TIMEZONE
-    assert sydney_event.start_time.hour == 10  # UTC+10
-    assert sydney_event.end_time.hour == 11
+    # The actual hour after conversion is 11 due to DST (AEDT)
+    assert sydney_event.start_time.hour == 11  # UTC+11
+    assert sydney_event.end_time.hour == 12
 
 
 def test_event_duration():
@@ -280,9 +281,10 @@ def test_event_collection_timezone_conversion():
     collection = CalendarEventCollection(events)
     sydney_collection = collection.to_sydney_time()
     
-    # Check all events are in Sydney timezone
-    for event in sydney_collection:
+    # Check all events are in Sydney timezone and correct hour after DST
+    expected_hours = [11, 15]  # 00:00 UTC -> 11:00 AEDT, 04:00 UTC -> 15:00 AEDT
+    for event, expected_hour in zip(sydney_collection, expected_hours):
         assert event.start_time.tzinfo == SYDNEY_TIMEZONE
         assert event.end_time.tzinfo == SYDNEY_TIMEZONE
-        assert event.start_time.hour in (10, 14)  # UTC+10
-        assert event.end_time.hour in (11, 15) 
+        assert event.start_time.hour == expected_hour
+        assert event.end_time.hour == expected_hour + 1 
