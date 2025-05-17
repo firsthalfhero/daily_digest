@@ -51,6 +51,8 @@ class MotionClient:
         # Set default headers
         session.headers.update({
             "X-API-Key": self.config.motion_api_key,
+            "Authorization": f"Bearer {self.config.motion_api_key}",
+            "Content-Type": "application/json",
             "Accept": "application/json",
         })
         
@@ -132,8 +134,14 @@ class MotionClient:
                 except ValueError:
                     error_details = {"text": e.response.text}
             
+            error_message = f"Motion API request failed: {str(e)}"
+            if error_details and isinstance(error_details, dict):
+                if 'error' in error_details:
+                    error_message += f" ({error_details['error']})"
+                elif 'message' in error_details:
+                    error_message += f" ({error_details['message']})"
             raise MotionAPIError(
-                message=f"Motion API request failed: {str(e)}",
+                message=error_message,
                 status_code=status_code,
                 details=error_details,
                 cause=e,

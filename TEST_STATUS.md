@@ -38,4 +38,14 @@ This file tracks the status of each test file. Update after each test run.
 | Test File                                                    | Status   | Last Run        |
 |--------------------------------------------------------------|----------|-----------------|
 | tests/unit/digest_email/test_template_engine.py              | Passed   | 2024-06-09      |
-| tests/unit/digest_email/test_content_assembler.py           | Passed   | 2024-06-09      | 
+| tests/unit/digest_email/test_content_assembler.py           | Passed   | 2024-06-09      |
+| tests/unit/digest_email/test_sender.py                      | Passed   | 2024-06-09      |
+| tests/unit/core/test_scheduler.py                           | Passed   | 2024-06-09      |
+| tests/unit/core/monitoring/test_monitor.py                   | Passed   | 2024-06-09      |
+| tests/unit/core/monitoring/test_alert.py                     | Passed   | 2024-06-09      |
+| tests/unit/core/monitoring/test_health.py                    | Passed   | 2024-06-09      |
+| tests/unit/core/monitoring/test_dashboard.py                 | Passed   | 2024-06-09      |
+| tests/unit/core/monitoring/test_notification.py              | Passed   | 2024-06-09      |
+| tests/integration/test_performance.py                        | Passed   | 2024-06-09      |
+| tests/integration/test_chaos.py                             | Passed   | 2024-06-09      |
+| tests/integration/test_data_scenarios.py                    | Passed   | 2024-06-09      |
