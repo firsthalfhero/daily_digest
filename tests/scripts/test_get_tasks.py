@@ -101,7 +101,7 @@ class TestGetTasksScript:
             "MOTION_API_KEY": "test_api_key",
             "MOTION_API_URL": "https://api.motion.dev/v1",
             "WEATHER_API_KEY": "test_weather_key",
-            "WEATHER_API_URL": "https://api.weatherapi.com/v1",
+            "WEATHER_API_URL": "https://weather.googleapis.com/v1",
         }
 
         with patch.dict("os.environ", env_vars, clear=True):
@@ -153,7 +153,7 @@ class TestGetTasksScript:
             "MOTION_API_KEY": "test_api_key",
             "MOTION_API_URL": "https://api.motion.dev/v1",
             "WEATHER_API_KEY": "test_weather_key",
-            "WEATHER_API_URL": "https://api.weatherapi.com/v1",
+            "WEATHER_API_URL": "https://weather.googleapis.com/v1",
         }
 
         with patch.dict("os.environ", env_vars, clear=True):
@@ -176,7 +176,7 @@ class TestGetTasksScript:
             "MOTION_API_KEY": "test_api_key",
             "MOTION_API_URL": "https://api.motion.dev/v1",
             "WEATHER_API_KEY": "test_weather_key",
-            "WEATHER_API_URL": "https://api.weatherapi.com/v1",
+            "WEATHER_API_URL": "https://weather.googleapis.com/v1",
         }
 
         with patch.dict("os.environ", env_vars, clear=True):
@@ -199,7 +199,7 @@ class TestGetTasksScript:
             "MOTION_API_KEY": "test_api_key",
             "MOTION_API_URL": "https://api.motion.dev/v1",
             "WEATHER_API_KEY": "test_weather_key",
-            "WEATHER_API_URL": "https://api.weatherapi.com/v1",
+            "WEATHER_API_URL": "https://weather.googleapis.com/v1",
         }
 
         with patch.dict("os.environ", env_vars, clear=True):
@@ -231,7 +231,7 @@ class TestGetTasksScript:
             "MOTION_API_KEY": "test_api_key",
             "MOTION_API_URL": "https://api.motion.dev/v1",
             "WEATHER_API_KEY": "test_weather_key",
-            "WEATHER_API_URL": "https://api.weatherapi.com/v1",
+            "WEATHER_API_URL": "https://weather.googleapis.com/v1",
         }
 
         with patch.dict("os.environ", env_vars, clear=True):
@@ -254,7 +254,7 @@ class TestGetTasksScript:
             "MOTION_API_KEY": "test_api_key",
             "MOTION_API_URL": "https://api.motion.dev/v1",
             "WEATHER_API_KEY": "test_weather_key",
-            "WEATHER_API_URL": "https://api.weatherapi.com/v1",
+            "WEATHER_API_URL": "https://weather.googleapis.com/v1",
         }
 
         # Mock command line arguments

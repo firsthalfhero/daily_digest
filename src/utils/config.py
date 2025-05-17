@@ -167,7 +167,7 @@ MOTION_API_URL=https://api.motion.dev/v1
 
 # Weather API
 WEATHER_API_KEY=your_weather_api_key_here
-WEATHER_API_URL=https://api.weatherapi.com/v1
+WEATHER_API_URL=https://weather.googleapis.com/v1
 
 # Email Configuration
 SMTP_HOST=smtp.example.com
