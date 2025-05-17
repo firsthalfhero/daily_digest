@@ -17,7 +17,7 @@ def api_config():
     """Create a test API configuration."""
     return WeatherAPIConfig(
         weather_api_key="test_api_key",
-        weather_api_url="https://api.weatherapi.com/v1",
+        weather_api_url="https://weather.googleapis.com/v1",
     )
 
 
@@ -57,22 +57,19 @@ def test_get_current_weather(client):
     mock_response = Mock()
     mock_response.json.return_value = {
         "location": {
-            "name": "Sydney",
+            "city": "Sydney",
             "region": "New South Wales",
             "country": "Australia",
-            "lat": -33.87,
-            "lon": 151.21,
-            "localtime": "2024-03-20 10:00"
+            "latitude": -33.87,
+            "longitude": 151.21,
+            "localTime": "2024-03-20T10:00:00+11:00"
         },
         "current": {
-            "temp_c": 22.0,
-            "condition": {
-                "text": "Sunny",
-                "icon": "113"
-            },
-            "wind_kph": 15.0,
+            "temperature": 22.0,
+            "condition": "Sunny",
+            "windSpeed": 15.0,
             "humidity": 65,
-            "feelslike_c": 23.0
+            "feelsLike": 23.0
         }
     }
     mock_response.status_code = 200
@@ -82,8 +79,9 @@ def test_get_current_weather(client):
     assert result == mock_response.json.return_value
     client.session.get.assert_called_once()
     call_args = client.session.get.call_args
-    assert "current.json" in call_args[0][0]
-    assert call_args[1]["params"]["q"] == f"{client.SYDNEY_LAT},{client.SYDNEY_LON}"
+    assert "weather:lookup" in call_args[0][0]
+    assert call_args[1]["params"]["location.latitude"] == client.SYDNEY_LAT
+    assert call_args[1]["params"]["location.longitude"] == client.SYDNEY_LON
 
 
 def test_get_forecast(client):
@@ -91,17 +89,12 @@ def test_get_forecast(client):
     mock_response = Mock()
     mock_response.json.return_value = {
         "forecast": {
-            "forecastday": [
+            "days": [
                 {
                     "date": "2024-03-20",
-                    "day": {
-                        "maxtemp_c": 25.0,
-                        "mintemp_c": 18.0,
-                        "condition": {
-                            "text": "Sunny",
-                            "icon": "113"
-                        }
-                    }
+                    "maxTemperature": 25.0,
+                    "minTemperature": 18.0,
+                    "condition": "Sunny"
                 }
             ]
         }
@@ -113,39 +106,21 @@ def test_get_forecast(client):
     assert result == mock_response.json.return_value
     client.session.get.assert_called_once()
     call_args = client.session.get.call_args
-    assert "forecast.json" in call_args[0][0]
+    assert "forecast/days:lookup" in call_args[0][0]
     assert call_args[1]["params"]["days"] == 1
 
 
 def test_get_forecast_invalid_days(client):
     """Test getting forecast with invalid days."""
-    with pytest.raises(ValueError, match="Forecast days must be between 1 and 3"):
-        client.get_forecast(days=4)
+    with pytest.raises(ValueError, match="Forecast days must be between 1 and 7"):
+        client.get_forecast(days=8)
 
 
 def test_get_weather_alerts(client):
     """Test getting weather alerts."""
     mock_response = Mock()
     mock_response.json.return_value = {
-        "alerts": {
-            "alert": [
-                {
-                    "headline": "Severe Weather Warning",
-                    "msgtype": "Alert",
-                    "severity": "Moderate",
-                    "urgency": "Expected",
-                    "areas": "Sydney Metropolitan",
-                    "category": "Met",
-                    "certainty": "Likely",
-                    "event": "Severe Thunderstorm Warning",
-                    "note": "The Bureau of Meteorology warns of severe thunderstorms.",
-                    "effective": "2024-03-20T10:00:00+10:00",
-                    "expires": "2024-03-20T16:00:00+10:00",
-                    "desc": "Severe thunderstorms are likely to produce damaging winds and heavy rainfall.",
-                    "instruction": "People in affected areas should take shelter."
-                }
-            ]
-        }
+        "alerts": []
     }
     mock_response.status_code = 200
     client.session.get.return_value = mock_response
@@ -154,7 +129,7 @@ def test_get_weather_alerts(client):
     assert result == mock_response.json.return_value
     client.session.get.assert_called_once()
     call_args = client.session.get.call_args
-    assert "alerts.json" in call_args[0][0]
+    assert "alerts" in call_args[0][0]
 
 
 def test_api_error_handling(client):
@@ -162,7 +137,7 @@ def test_api_error_handling(client):
     mock_response = Mock()
     mock_response.json.return_value = {
         "error": {
-            "code": 1006,
+            "code": 400,
             "message": "No location found"
         }
     }

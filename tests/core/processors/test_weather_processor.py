@@ -86,6 +86,8 @@ def hourly_forecast():
 def daily_forecast(sydney_location, hourly_forecast):
     """Create a daily forecast fixture."""
     base_time = datetime.now(ZoneInfo("Australia/Sydney"))
+    mm = 5.0
+    inches = round(mm / 25.4, 3)
     return ForecastDay(
         date=base_time,
         max_temp_c=25.0,
@@ -96,8 +98,8 @@ def daily_forecast(sydney_location, hourly_forecast):
         avg_temp_f=70.7,
         max_wind_speed_kmh=20.0,
         max_wind_speed_mph=12.4,
-        total_precipitation_mm=5.0,
-        total_precipitation_inches=0.2,
+        total_precipitation_mm=mm,
+        total_precipitation_inches=inches,
         avg_humidity=70,
         condition=WeatherCondition.PARTLY_CLOUDY,
         uv_index=7.0,

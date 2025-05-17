@@ -1,13 +1,15 @@
 # Daily Digest Assistant - Architecture Document
 
+> **Migration Note:** As of [DATE], the weather integration is migrating from IBM/The Weather Company to the Google Weather API. See `CHANGE_REQUEST - 1.1 Google Weather API.md` for rationale and migration plan.
+
 ## 1. System Overview
 
 ### 1.1 Purpose
-The Daily Digest Assistant is a serverless application that delivers personalized morning briefings via email at 6:30 AM Sydney time. It combines calendar data from Motion with weather information, presented with British-style personality and humor.
+The Daily Digest Assistant is a serverless application that delivers personalized morning briefings via email at 6:30 AM Sydney time. It combines calendar data from Motion with weather information (now sourced from Google Weather API), presented with British-style personality and humor.
 
 ### 1.2 Core Components
 - **Motion API Integration**: Retrieves calendar data
-- **Weather API Integration**: Fetches weather information
+- **Google Weather API Integration**: Fetches weather information
 - **Email Generation**: Creates personalized digest content
 - **Email Delivery**: Sends the digest via email service
 - **Scheduling System**: Ensures 6:30 AM Sydney time delivery
@@ -26,7 +28,7 @@ The Daily Digest Assistant is a serverless application that delivers personalize
 graph TD
     A[EventBridge Rule] -->|Triggers at 6:30 AM Sydney| B[Lambda Function]
     B -->|Fetches Data| C[Motion API]
-    B -->|Fetches Data| D[Weather API]
+    B -->|Fetches Data| D[Google Weather API]
     B -->|Sends Email| E[Email Service]
     B -->|Logs Operations| F[CloudWatch Logs]
     B -->|Stores State| G[DynamoDB]
@@ -44,7 +46,7 @@ graph TD
 1. **Data Collection**
    - EventBridge triggers Lambda at 6:30 AM Sydney time
    - Lambda sequentially fetches data from Motion API
-   - Lambda fetches weather data from Weather API
+   - Lambda fetches weather data from Google Weather API
    - All API calls include retry logic and error handling
 
 2. **Data Processing**
@@ -251,6 +253,6 @@ graph TD
 
 ### 10.2 API Documentation
 - Motion API integration
-- Weather API integration
+- Google Weather API integration
 - Email service integration
 - AWS service integration

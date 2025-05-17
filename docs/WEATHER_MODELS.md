@@ -1,8 +1,15 @@
 # Weather Data Models Documentation
 
-## Overview
+> **Migration Note:** As of [DATE], the weather integration is migrating from IBM/The Weather Company to the Google Weather API. See `CHANGE_REQUEST - 1.1 Google Weather API.md` for rationale and migration plan.
 
 The weather data models provide a comprehensive structure for handling weather data in the email digest system. All models inherit from `BaseWeatherModel` and include versioning, metadata, and timestamp tracking.
+
+## Data Source Mapping
+
+- **Primary Source:** Google Weather API (see `API_INTEGRATION.md` for request/response details)
+- **Field Mapping:**
+  - Google API fields (e.g., `currentWeather.temperature`, `currentWeather.weatherCode`, `dailyForecast.maxTemperature`) are mapped to internal model fields (e.g., `CurrentWeather.temperature_c`, `ForecastDay.max_temp_c`).
+  - See usage examples below for mapping guidance.
 
 ## Model Hierarchy
 
@@ -67,18 +74,18 @@ Represents current weather conditions at a location:
 ```python
 class CurrentWeather(BaseWeatherModel):
     location: Location
-    temperature_c: float
+    temperature_c: float  # Maps from Google: currentWeather.temperature
     temperature_f: float
-    feels_like_c: float
+    feels_like_c: float   # Maps from Google: currentWeather.apparentTemperature
     feels_like_f: float
     humidity: int  # 0-100
-    wind_speed_kmh: float
+    wind_speed_kmh: float  # Maps from Google: currentWeather.windSpeed
     wind_speed_mph: float
-    wind_direction: str
-    precipitation_mm: float
+    wind_direction: str    # Maps from Google: currentWeather.windDirection
+    precipitation_mm: float  # Maps from Google: currentWeather.precipitation
     precipitation_inches: float
     uv_index: float
-    condition: WeatherCondition
+    condition: WeatherCondition  # Maps from Google: currentWeather.weatherCode
     observation_time: datetime
 ```
 
@@ -119,19 +126,19 @@ Daily forecast with hourly breakdown:
 
 ```python
 class ForecastDay(BaseWeatherModel):
-    date: datetime
-    max_temp_c: float
+    date: datetime  # Maps from Google: dailyForecast.date
+    max_temp_c: float  # Maps from Google: dailyForecast.maxTemperature
     max_temp_f: float
-    min_temp_c: float
+    min_temp_c: float  # Maps from Google: dailyForecast.minTemperature
     min_temp_f: float
     avg_temp_c: float
     avg_temp_f: float
-    max_wind_speed_kmh: float
+    max_wind_speed_kmh: float  # Maps from Google: dailyForecast.windSpeed
     max_wind_speed_mph: float
     total_precipitation_mm: float
     total_precipitation_inches: float
     avg_humidity: int
-    condition: WeatherCondition
+    condition: WeatherCondition  # Maps from Google: dailyForecast.weatherCode
     uv_index: float
     sunrise: datetime
     sunset: datetime
@@ -199,7 +206,7 @@ class WeatherAlerts(BaseWeatherModel):
 
 ```python
 class WeatherCondition(str, Enum):
-    SUNNY = "sunny"
+    SUNNY = "sunny"  # Maps from Google: weatherCode = "SUNNY"
     PARTLY_CLOUDY = "partly_cloudy"
     CLOUDY = "cloudy"
     RAIN = "rain"
@@ -246,21 +253,42 @@ location = Location(
 )
 ```
 
-### Getting Current Weather
+### Getting Current Weather (from Google API response)
 
 ```python
+# Example Google API response mapping
+api_response = {
+    "currentWeather": {
+        "temperature": 22.5,
+        "apparentTemperature": 23.0,
+        "humidity": 65,
+        "windSpeed": 15,
+        "windDirection": "SE",
+        "precipitation": 0,
+        "weatherCode": "SUNNY"
+    },
+    "location": {
+        "latitude": -33.8688,
+        "longitude": 151.2093,
+        "regionCode": "AU-NSW",
+        "timezone": "Australia/Sydney"
+    }
+}
+
 current = CurrentWeather(
     location=location,
-    temperature_c=22.5,
-    temperature_f=72.5,  # Automatically validated
-    humidity=65,
-    wind_speed_kmh=15.0,
-    wind_speed_mph=9.3,  # Automatically validated
-    condition=WeatherCondition.SUNNY
+    temperature_c=api_response["currentWeather"]["temperature"],
+    temperature_f=convert_temperature(api_response["currentWeather"]["temperature"]),
+    feels_like_c=api_response["currentWeather"]["apparentTemperature"],
+    feels_like_f=convert_temperature(api_response["currentWeather"]["apparentTemperature"]),
+    humidity=api_response["currentWeather"]["humidity"],
+    wind_speed_kmh=api_response["currentWeather"]["windSpeed"],
+    wind_speed_mph=convert_wind_speed(api_response["currentWeather"]["windSpeed"]),
+    condition=WeatherCondition(api_response["currentWeather"]["weatherCode"])
 )
 ```
 
-### Creating a Forecast
+### Creating a Forecast (from Google API response)
 
 ```python
 forecast = WeatherForecast(
@@ -268,95 +296,16 @@ forecast = WeatherForecast(
     current=current,
     daily_forecasts=[
         ForecastDay(
-            date=datetime.now(ZoneInfo("Australia/Sydney")),
-            max_temp_c=25.0,
-            min_temp_c=18.0,
-            condition=WeatherCondition.SUNNY,
-            hourly_forecasts=[
-                ForecastHour(
-                    time=datetime.now(ZoneInfo("Australia/Sydney")),
-                    temperature_c=22.5,
-                    condition=WeatherCondition.PARTLY_CLOUDY
-                )
-            ]
-        )
+            date=datetime.strptime(day["date"], "%Y-%m-%d"),
+            max_temp_c=day["maxTemperature"],
+            min_temp_c=day["minTemperature"],
+            condition=WeatherCondition(day["weatherCode"]),
+            max_wind_speed_kmh=day["windSpeed"]
+        ) for day in api_response.get("dailyForecast", [])
     ]
 )
 ```
 
 ### Handling Alerts
 
-```python
-alert = WeatherAlert(
-    alert_type=AlertType.RAIN,
-    severity=AlertSeverity.MODERATE,
-    title="Heavy Rain Warning",
-    start_time=datetime.now(ZoneInfo("Australia/Sydney")),
-    end_time=datetime.now(ZoneInfo("Australia/Sydney")) + timedelta(hours=24),
-    affected_areas=["Sydney", "Central Coast"]
-)
-
-alerts = WeatherAlerts(
-    location=location,
-    alerts=[alert]
-)
 ```
-
-## Best Practices
-
-1. **Timezone Handling**
-   - Always use IANA timezone names
-   - Store times in UTC, convert to local for display
-   - Use ZoneInfo for timezone operations
-
-2. **Unit Conversions**
-   - Always provide both metric and imperial units
-   - Let the model handle conversions
-   - Use appropriate precision for each unit
-
-3. **Validation**
-   - Validate data before model creation
-   - Handle validation errors gracefully
-   - Use model methods for complex validation
-
-4. **Metadata**
-   - Use metadata for extensibility
-   - Include source information
-   - Track confidence levels
-
-5. **Versioning**
-   - Increment version for breaking changes
-   - Document version changes
-   - Support backward compatibility
-
-## Error Handling
-
-Common validation errors and how to handle them:
-
-```python
-try:
-    weather = CurrentWeather(**data)
-except ValidationError as e:
-    # Handle validation errors
-    logger.error(f"Validation error: {e}")
-except ValueError as e:
-    # Handle value errors
-    logger.error(f"Value error: {e}")
-```
-
-## Performance Considerations
-
-1. **Memory Usage**
-   - Models are lightweight
-   - Use lazy loading for large collections
-   - Clear unused metadata
-
-2. **Processing**
-   - Validate early
-   - Use model methods for complex operations
-   - Cache frequently accessed data
-
-3. **Serialization**
-   - Use model_dump() for dict conversion
-   - Use model_dump_json() for JSON
-   - Handle timezone serialization carefully 

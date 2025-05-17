@@ -1,5 +1,7 @@
 # API Integration Specifications
 
+> **Migration Note:** As of [DATE], the weather integration is migrating from IBM/The Weather Company to the Google Weather API. See `CHANGE_REQUEST - 1.1 Google Weather API.md` for rationale and migration plan.
+
 ## 1. Motion API Integration
 
 ### 1.1 Authentication and Configuration
@@ -87,7 +89,7 @@ required_fields = [
 # - Group by time of day (morning/afternoon/evening)
 ```
 
-## 2. Weather API Integration
+## 2. Weather API Integration (Google)
 
 ### 2.1 Authentication
 ```python
@@ -100,49 +102,74 @@ required_fields = [
 
 #### Current Weather
 ```python
-# Endpoint: https://api.weather.com/v1/current
-# Method: GET
-# Parameters:
-#   - location: Sydney,AU (required)
-#   - units: metric (required)
+# Endpoint: https://weather.googleapis.com/v1/weather:lookup
+# Method: POST
+# Request Body:
+#   - location: { latitude: float, longitude: float }
+#   - units: 'CELSIUS' | 'FAHRENHEIT' (optional, default: CELSIUS)
+#   - languageCode: 'en' (optional)
+#   - key: {weather_api_key} (as URL param)
 
 # Example Request
-GET /v1/current?location=Sydney,AU&units=metric
-X-API-Key: {weather_api_key}
+POST /v1/weather:lookup?key=YOUR_API_KEY
+Content-Type: application/json
+{
+    "location": { "latitude": -33.8688, "longitude": 151.2093 },
+    "units": "CELSIUS"
+}
 
 # Example Response
 {
-    "current": {
+    "currentWeather": {
         "temperature": 22.5,
-        "feels_like": 23.0,
-        "conditions": "Sunny",
+        "apparentTemperature": 23.0,
         "humidity": 65,
-        "wind_speed": 15,
-        "wind_direction": "SE",
+        "windSpeed": 15,
+        "windDirection": "SE",
         "precipitation": 0,
-        "uv_index": 8
+        "weatherCode": "SUNNY",
+        "weatherDescription": "Sunny"
+    },
+    "location": {
+        "latitude": -33.8688,
+        "longitude": 151.2093,
+        "regionCode": "AU-NSW",
+        "timezone": "Australia/Sydney"
     }
 }
 ```
 
 #### Daily Forecast
 ```python
-# Endpoint: https://api.weather.com/v1/forecast
-# Method: GET
-# Parameters:
-#   - location: Sydney,AU (required)
-#   - units: metric (required)
-#   - days: 1 (required)
+# Endpoint: https://weather.googleapis.com/v1/weather:lookup
+# Method: POST
+# Request Body:
+#   - location: { latitude: float, longitude: float }
+#   - dailyForecastRequired: true
+#   - days: int (1-7)
+#   - units: 'CELSIUS' | 'FAHRENHEIT' (optional)
+#   - key: {weather_api_key} (as URL param)
+
+# Example Request
+POST /v1/weather:lookup?key=YOUR_API_KEY
+Content-Type: application/json
+{
+    "location": { "latitude": -33.8688, "longitude": 151.2093 },
+    "dailyForecastRequired": true,
+    "days": 1,
+    "units": "CELSIUS"
+}
 
 # Example Response
 {
-    "forecast": [
+    "dailyForecast": [
         {
-            "time": "09:00",
-            "temperature": 21.0,
-            "conditions": "Sunny",
-            "precipitation_chance": 10,
-            "wind_speed": 12
+            "date": "2024-03-20",
+            "maxTemperature": 25.0,
+            "minTemperature": 18.0,
+            "weatherCode": "SUNNY",
+            "precipitationProbability": 10,
+            "windSpeed": 12
         }
     ]
 }
@@ -151,14 +178,13 @@ X-API-Key: {weather_api_key}
 ### 2.3 Error Handling
 ```python
 # Rate Limits
-# - 60 requests per minute
-# - 1000 requests per day
+# - See Google API documentation for quota details
 
 # Error Responses
 {
     "error": {
-        "code": "invalid_api_key",
-        "message": "Invalid API key provided"
+        "code": 401,
+        "message": "API key not valid. Please pass a valid API key."
     }
 }
 
@@ -169,140 +195,12 @@ X-API-Key: {weather_api_key}
 ```
 
 ### 2.4 Data Processing
-```python
-# Weather Data Models
-from src.core.models.weather import (
-    BaseWeatherModel,
-    Location,
-    CurrentWeather,
-    ForecastHour,
-    ForecastDay,
-    WeatherForecast,
-    WeatherAlert,
-    WeatherAlerts,
-    WeatherCondition,
-    AlertSeverity,
-    AlertType
-)
+- Map Google Weather API fields to internal models (see `docs/WEATHER_MODELS.md`).
+- Validate all required fields and handle unit conversions as per internal standards.
 
-# Model Usage Example
-location = Location(
-    city="Sydney",
-    region="NSW",
-    country="Australia",
-    latitude=-33.8688,
-    longitude=151.2093,
-    timezone="Australia/Sydney"
-)
-
-current_weather = CurrentWeather(
-    location=location,
-    temperature_c=22.5,
-    temperature_f=72.5,
-    feels_like_c=23.0,
-    feels_like_f=73.4,
-    humidity=65,
-    wind_speed_kmh=15.0,
-    wind_speed_mph=9.3,
-    wind_direction="SE",
-    precipitation_mm=0.0,
-    precipitation_inches=0.0,
-    uv_index=6.0,
-    condition=WeatherCondition.SUNNY
-)
-
-# Data Validation
-# - All models inherit from BaseWeatherModel
-# - Automatic unit conversion (C/F, mm/inches, km/h/mph)
-# - Timezone validation and conversion
-# - Coordinate validation (-90 to 90 lat, -180 to 180 lon)
-# - Chronological ordering for forecasts
-# - Alert overlap detection
-
-# Required Fields and Validation
-required_fields = {
-    'location': [
-        'city',
-        'latitude',
-        'longitude',
-        'timezone'
-    ],
-    'current_weather': [
-        'temperature_c',
-        'temperature_f',
-        'humidity',
-        'wind_speed_kmh',
-        'wind_speed_mph',
-        'condition'
-    ],
-    'forecast': [
-        'date',
-        'max_temp_c',
-        'min_temp_c',
-        'condition',
-        'hourly_forecasts'
-    ],
-    'alert': [
-        'alert_type',
-        'severity',
-        'title',
-        'start_time',
-        'end_time'
-    ]
-}
-
-# Weather Conditions
-weather_conditions = {
-    'SUNNY': '☀️',
-    'PARTLY_CLOUDY': '⛅',
-    'CLOUDY': '☁️',
-    'RAIN': '🌧️',
-    'THUNDERSTORM': '⛈️',
-    'SNOW': '❄️',
-    'FOG': '🌫️',
-    'WINDY': '💨'
-}
-
-# Alert Types and Severity
-alert_types = {
-    'RAIN': 'Rain Warning',
-    'WIND': 'Wind Warning',
-    'THUNDERSTORM': 'Thunderstorm Warning',
-    'FLOOD': 'Flood Warning',
-    'FIRE': 'Fire Warning'
-}
-
-alert_severity = {
-    'MINOR': 'Minor',
-    'MODERATE': 'Moderate',
-    'SEVERE': 'Severe',
-    'EXTREME': 'Extreme'
-}
-
-# Data Processing Guidelines
-# 1. Location Processing
-#    - Validate coordinates
-#    - Verify timezone
-#    - Format city/region names
-#
-# 2. Current Weather
-#    - Convert temperatures (C/F)
-#    - Convert precipitation (mm/inches)
-#    - Convert wind speeds (km/h/mph)
-#    - Validate observation time
-#
-# 3. Forecast Processing
-#    - Ensure chronological order
-#    - Validate temperature ranges
-#    - Check sunrise/sunset times
-#    - Process hourly forecasts
-#
-# 4. Alert Processing
-#    - Check for overlapping alerts
-#    - Validate time periods
-#    - Group by severity
-#    - Sort by start time
-```
+### 2.5 References
+- [Google Weather API Documentation](https://developers.google.com/maps/documentation/weather/overview)
+- See also: `CHANGE_REQUEST - 1.1 Google Weather API.md`
 
 ## 3. Implementation Guidelines
 
