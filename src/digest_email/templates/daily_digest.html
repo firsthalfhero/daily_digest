@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}Your Daily Digest{% endblock %}
+
+{% block header %}Good {{ greeting_time }}, {{ user_name }}!{% endblock %}
+
+{% block body %}
+    <section>
+        <h2>Today's Calendar</h2>
+        {% if calendar_events %}
+            <ul>
+            {% for event in calendar_events %}
+                <li><strong>{{ event.time }}</strong>: {{ event.title }} ({{ event.location }})</li>
+            {% endfor %}
+            </ul>
+        {% else %}
+            <p>No events today. Time for a cuppa?</p>
+        {% endif %}
+    </section>
+    <section>
+        <h2>Weather Forecast</h2>
+        {% if weather %}
+            <p>{{ weather.summary }} | High: {{ weather.high }}°C | Low: {{ weather.low }}°C</p>
+        {% else %}
+            <p>Weather's a bit of a mystery today. Best bring a brolly, just in case!</p>
+        {% endif %}
+    </section>
+    <section>
+        <h2>Daily Summary</h2>
+        <p>{{ daily_summary }}</p>
+    </section>
+{% endblock %}
+
+{% block footer %}{{ super() }}<br>Cheerio!{% endblock %} 

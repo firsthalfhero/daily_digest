@@ -110,10 +110,16 @@ class Location(BaseWeatherModel):
     
     @field_validator("local_time")
     @classmethod
-    def validate_local_time(cls, v: datetime, values: Dict[str, Any]) -> datetime:
+    def validate_local_time(cls, v: datetime, values) -> datetime:
         """Validate that local time matches timezone."""
-        if "timezone" in values and v.tzinfo and v.tzinfo.key != values["timezone"]:
-            raise ValidationError(f"Local time timezone {v.tzinfo.key} does not match location timezone {values['timezone']}")
+        # Pydantic v2: values is a ValidationInfo object
+        timezone = None
+        if hasattr(values, 'data') and 'timezone' in values.data:
+            timezone = values.data['timezone']
+        elif isinstance(values, dict):
+            timezone = values.get('timezone')
+        if timezone and v.tzinfo and getattr(v.tzinfo, 'key', None) != timezone:
+            raise ValidationError(f"Local time timezone {getattr(v.tzinfo, 'key', None)} does not match location timezone {timezone}")
         return v
 
 class CurrentWeather(BaseWeatherModel):
@@ -306,21 +312,6 @@ class ForecastDay(BaseWeatherModel):
             raise ValidationError(f"Sunrise time ({self.sunrise}) must be before sunset time ({self.sunset})")
         return self
 
-class WeatherForecast(BaseWeatherModel):
-    """Complete weather forecast for a location."""
-    
-    location: Location = Field(..., description="Location information")
-    current: CurrentWeather = Field(..., description="Current weather conditions")
-    daily_forecasts: List[ForecastDay] = Field(..., description="Daily forecasts", min_items=1)
-    
-    @model_validator(mode='after')
-    def validate_forecast_sequence(self) -> 'WeatherForecast':
-        """Validate forecast dates are in sequence."""
-        dates = [f.date for f in self.daily_forecasts]
-        if dates != sorted(dates):
-            raise ValidationError("Daily forecasts must be in chronological order")
-        return self
-
 class WeatherAlert(BaseWeatherModel):
     """Weather alert information."""
     
@@ -364,4 +355,20 @@ class WeatherAlerts(BaseWeatherModel):
                         f"{existing.title} ({existing.start_time} to {existing.end_time})"
                     )
             alert_types[alert.alert_type].append(alert)
+        return self
+
+class WeatherForecast(BaseWeatherModel):
+    """Complete weather forecast for a location."""
+    
+    location: Location = Field(..., description="Location information")
+    current: CurrentWeather = Field(..., description="Current weather conditions")
+    daily_forecasts: List[ForecastDay] = Field(..., description="Daily forecasts", min_items=1)
+    alerts: WeatherAlerts = Field(default_factory=lambda: WeatherAlerts(location=None, alerts=[]), description="Weather alerts for the location")
+    
+    @model_validator(mode='after')
+    def validate_forecast_sequence(self) -> 'WeatherForecast':
+        """Validate forecast dates are in sequence."""
+        dates = [f.date for f in self.daily_forecasts]
+        if dates != sorted(dates):
+            raise ValidationError("Daily forecasts must be in chronological order")
         return self 

@@ -1,0 +1,9 @@
+{% block header %}Your Daily Digest{% endblock %}
+
+{% block body %}{% endblock %}
+
+{% block footer %}You are receiving this email because you subscribed to Daily Digest.
+Unsubscribe: {{ unsubscribe_url }}
+Preferences: {{ preferences_url }}
+
+Made with a spot of British charm.{% endblock %} 

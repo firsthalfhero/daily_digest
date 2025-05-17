@@ -22,7 +22,7 @@ def mock_env_vars():
         "MOTION_API_KEY": "test_motion_key",
         "MOTION_API_URL": "https://api.motion.dev/v1",
         "WEATHER_API_KEY": "test_weather_key",
-        "WEATHER_API_URL": "https://api.weatherapi.com/v1",
+        "WEATHER_API_URL": "https://weather.googleapis.com/v1",
         "SMTP_HOST": "smtp.test.com",
         "SMTP_PORT": "587",
         "SMTP_USERNAME": "test_user",
@@ -49,6 +49,7 @@ def test_load_config_success(mock_env_vars):
         assert config.aws_region == "ap-southeast-2"
         assert config.log_level == "DEBUG"
         assert config.log_file == Path("logs/test.log")
+        assert config.weather.weather_api_url == "https://weather.googleapis.com/v1"
 
 
 def test_load_config_missing_required():
@@ -64,7 +65,7 @@ def test_load_config_invalid_email():
         "MOTION_API_KEY": "test",
         "MOTION_API_URL": "https://api.motion.dev/v1",
         "WEATHER_API_KEY": "test",
-        "WEATHER_API_URL": "https://api.weatherapi.com/v1",
+        "WEATHER_API_URL": "https://weather.googleapis.com/v1",
         "SMTP_HOST": "smtp.test.com",
         "SMTP_PORT": "587",
         "SMTP_USERNAME": "test",
@@ -82,7 +83,7 @@ def test_load_config_invalid_api_url():
         "MOTION_API_KEY": "test",
         "MOTION_API_URL": "invalid-url",
         "WEATHER_API_KEY": "test",
-        "WEATHER_API_URL": "https://api.weatherapi.com/v1",
+        "WEATHER_API_URL": "https://weather.googleapis.com/v1",
         "SMTP_HOST": "smtp.test.com",
         "SMTP_PORT": "587",
         "SMTP_USERNAME": "test",
@@ -100,7 +101,7 @@ def test_load_config_invalid_log_level():
         "MOTION_API_KEY": "test",
         "MOTION_API_URL": "https://api.motion.dev/v1",
         "WEATHER_API_KEY": "test",
-        "WEATHER_API_URL": "https://api.weatherapi.com/v1",
+        "WEATHER_API_URL": "https://weather.googleapis.com/v1",
         "SMTP_HOST": "smtp.test.com",
         "SMTP_PORT": "587",
         "SMTP_USERNAME": "test",
@@ -173,17 +174,17 @@ class TestWeatherAPIConfig:
         """Test initializing with valid configuration values."""
         config = WeatherAPIConfig(
             weather_api_key="test_weather_key",
-            weather_api_url="https://api.weatherapi.com/v1",
+            weather_api_url="https://weather.googleapis.com/v1",
         )
         assert config.weather_api_key == "test_weather_key"
-        assert config.weather_api_url == "https://api.weatherapi.com/v1"
+        assert config.weather_api_url == "https://weather.googleapis.com/v1"
 
     def test_init_with_empty_values(self):
         """Test initializing with empty configuration values."""
         with pytest.raises(ConfigurationError) as exc_info:
             WeatherAPIConfig(
                 weather_api_key="",
-                weather_api_url="https://api.weatherapi.com/v1",
+                weather_api_url="https://weather.googleapis.com/v1",
             )
         assert "Empty configuration value" in str(exc_info.value)
 
@@ -214,7 +215,7 @@ class TestLoadConfig:
             "MOTION_API_KEY": "test_motion_key",
             "MOTION_API_URL": "https://api.motion.dev/v1",
             "WEATHER_API_KEY": "test_weather_key",
-            "WEATHER_API_URL": "https://api.weatherapi.com/v1",
+            "WEATHER_API_URL": "https://weather.googleapis.com/v1",
             "SMTP_HOST": "smtp.test.com",
             "SMTP_PORT": "587",
             "SMTP_USERNAME": "test_user",
@@ -235,7 +236,7 @@ class TestLoadConfig:
             assert config.motion.motion_api_key == "test_motion_key"
             assert config.motion.motion_api_url == "https://api.motion.dev/v1"
             assert config.weather.weather_api_key == "test_weather_key"
-            assert config.weather.weather_api_url == "https://api.weatherapi.com/v1"
+            assert config.weather.weather_api_url == "https://weather.googleapis.com/v1"
 
     def test_load_config_with_missing_env_vars(self):
         """Test loading configuration with missing environment variables."""

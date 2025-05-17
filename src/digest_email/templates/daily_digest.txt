@@ -1,0 +1,23 @@
+{% extends "base.txt" %}
+
+{% block header %}Good {{ greeting_time }}, {{ user_name }}!{% endblock %}
+
+{% block body %}
+Today's Calendar:
+{% if calendar_events %}
+{% for event in calendar_events %}- {{ event.time }}: {{ event.title }} ({{ event.location }})
+{% endfor %}
+{% else %}No events today. Time for a cuppa?
+{% endif %}
+
+Weather Forecast:
+{% if weather %}{{ weather.summary }} | High: {{ weather.high }}°C | Low: {{ weather.low }}°C
+{% else %}Weather's a bit of a mystery today. Best bring a brolly, just in case!
+{% endif %}
+
+Daily Summary:
+{{ daily_summary }}
+{% endblock %}
+
+{% block footer %}{{ super() }}
+Cheerio!{% endblock %} 

@@ -32,3 +32,9 @@ This file tracks the status of each test file. Update after each test run.
 | tests/unit/core/clients/test_weather_client.py              | Added    | 2024-03-20      |
 | tests/unit/core/cache/test_weather_cache.py                 | Added    | 2024-03-20      |
 | tests/scripts/test_get_tasks.py | 6 Passed, 1 xFail | 2024-05-13 | 
+
+## Epic 4 (Email Template System) Tests
+
+| Test File                                                    | Status   | Last Run        |
+|--------------------------------------------------------------|----------|-----------------|
+| tests/unit/digest_email/test_template_engine.py              | Passed   | 2024-06-09      | 

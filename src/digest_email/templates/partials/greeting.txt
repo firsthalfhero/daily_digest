@@ -1,0 +1,5 @@
+{% if personality == 'formal' %}
+Good {{ greeting_time }}, {{ user_name }}. I trust you are well.
+{% else %}
+Alright, {{ user_name }}? Hope your day's off to a cracking start!
+{% endif %} 
