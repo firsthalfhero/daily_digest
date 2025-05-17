@@ -37,4 +37,5 @@ This file tracks the status of each test file. Update after each test run.
 
 | Test File                                                    | Status   | Last Run        |
 |--------------------------------------------------------------|----------|-----------------|
-| tests/unit/digest_email/test_template_engine.py              | Passed   | 2024-06-09      | 
+| tests/unit/digest_email/test_template_engine.py              | Passed   | 2024-06-09      |
+| tests/unit/digest_email/test_content_assembler.py           | Passed   | 2024-06-09      | 
