@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en" style="margin:0;padding:0;">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Daily Digest{% endblock %}</title>
+    <style>
+        /* Mobile-first, responsive, inlined CSS for email */
+        body {
+            margin: 0;
+            padding: 0;
+            background: #f7f7f7;
+            color: #222;
+            font-family: Arial, 'Segoe UI', sans-serif;
+            line-height: 1.5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        header, footer {
+            background: #003366;
+            color: #fff;
+            padding: 16px;
+            text-align: center;
+        }
+        main {
+            padding: 24px 16px;
+        }
+        @media (prefers-color-scheme: dark) {
+            body { background: #181a1b; color: #eee; }
+            .container { background: #23272a; }
+            header, footer { background: #222; color: #eee; }
+        }
+        @media (max-width: 600px) {
+            .container { border-radius: 0; }
+            main { padding: 16px 8px; }
+        }
+        a { color: #1a73e8; }
+    </style>
+</head>
+<body>
+    <div class="container" role="article">
+        <header>
+            <h1>{% block header %}Your Daily Digest{% endblock %}</h1>
+        </header>
+        <main>
+            {% block body %}{% endblock %}
+        </main>
+        <footer>
+            <p>{% block footer %}You are receiving this email because you subscribed to Daily Digest. <a href="{{ unsubscribe_url }}">Unsubscribe</a> | <a href="{{ preferences_url }}">Preferences</a>{% endblock %}</p>
+            <small>Made with a spot of British charm.</small>
+        </footer>
+    </div>
+</body>
+</html> 
