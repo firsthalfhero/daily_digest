@@ -188,19 +188,29 @@ class MotionClient:
         if due_date:
             params["due_date"] = due_date.isoformat()
         
+        print(f"[DEBUG] Calling get_tasks with params: {params}")
         try:
             response = self._make_request(
                 method="GET",
                 endpoint="/tasks",
                 params=params,
             )
-            
+            import json
+            print("[DEBUG] Raw /tasks API response:")
+            print(json.dumps(response, indent=2))
+            # Write the full response to a markdown file for inspection
+            with open("motion_api_tasks_response.md", "w", encoding="utf-8") as f:
+                f.write("```json\n")
+                f.write(json.dumps(response, indent=2))
+                f.write("\n```")
             # Convert API response to Task objects
             tasks = [
                 Task.from_api_data(task_data)
                 for task_data in response.get("tasks", [])
             ]
-            
+            print(f"[DEBUG] Parsed {len(tasks)} tasks from API response.")
+            for t in tasks:
+                print(f"  - Task: id={t.id}, title={t.title}, status={getattr(t, 'status', None)}, scheduled_start={getattr(t, 'scheduled_start', None)}")
             return TaskCollection(tasks=tasks)
             
         except MotionAPIError as e:
@@ -334,6 +344,7 @@ class MotionClient:
         Get tasks scheduled for today from Motion API, or for a custom date if params['due_date'] is provided.
         If params is provided, pass it to the API request.
         """
+        print(f"[DEBUG] Calling get_tasks_scheduled_for_today with params: {params}")
         try:
             if params is not None:
                 response = self._make_request(
@@ -341,24 +352,49 @@ class MotionClient:
                     endpoint="/tasks",
                     params=params,
                 )
+                import json
+                print("[DEBUG] Raw /tasks API response (scheduled for today):")
+                print(json.dumps(response, indent=2))
+                # Write the full response to a markdown file for inspection
+                with open("motion_api_tasks_response.md", "w", encoding="utf-8") as f:
+                    f.write("```json\n")
+                    f.write(json.dumps(response, indent=2))
+                    f.write("\n```")
                 tasks = [
                     Task.from_api_data(task_data)
                     for task_data in response.get("tasks", [])
                 ]
+                print(f"[DEBUG] Parsed {len(tasks)} tasks from API response (scheduled for today).")
+                for t in tasks:
+                    print(f"  - Task: id={t.id}, title={t.title}, status={getattr(t, 'status', None)}, scheduled_start={getattr(t, 'scheduled_start', None)}")
                 return TaskCollection(tasks=tasks)
             else:
                 # Get all tasks (we'll filter client-side)
+                print("[DEBUG] No params provided, fetching all tasks for client-side filtering.")
                 response = self._make_request(
                     method="GET",
                     endpoint="/tasks",
                 )
+                import json
+                print("[DEBUG] Raw /tasks API response (all tasks):")
+                print(json.dumps(response, indent=2))
+                # Write the full response to a markdown file for inspection
+                with open("motion_api_tasks_response.md", "w", encoding="utf-8") as f:
+                    f.write("```json\n")
+                    f.write(json.dumps(response, indent=2))
+                    f.write("\n```")
                 tasks = [
                     Task.from_api_data(task_data)
                     for task_data in response.get("tasks", [])
                 ]
+                print(f"[DEBUG] Parsed {len(tasks)} tasks from API response (all tasks). Filtering by scheduled date.")
                 all_tasks = TaskCollection(tasks=tasks)
                 today = datetime.now(timezone.utc)
-                return all_tasks.filter_by_scheduled_date(today)
+                filtered = all_tasks.filter_by_scheduled_date(today)
+                print(f"[DEBUG] {len(filtered)} tasks remain after filtering by scheduled date (today={today.date()}).")
+                for t in filtered:
+                    print(f"  - Task: id={t.id}, title={t.title}, status={getattr(t, 'status', None)}, scheduled_start={getattr(t, 'scheduled_start', None)}")
+                return filtered
         except MotionAPIError as e:
             logger.error(
                 "failed_to_get_today_tasks",

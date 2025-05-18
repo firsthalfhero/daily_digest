@@ -174,12 +174,15 @@ class CalendarEvent(BaseModel):
         """
         try:
             # Transform API data to match our model
+            status_val = data.get("status", "confirmed")
+            if isinstance(status_val, dict):
+                status_val = status_val.get("name", "confirmed")
             event_data = {
                 "id": data["id"],
                 "title": data["title"],
                 "start_time": datetime.fromisoformat(data["start"]),
                 "end_time": datetime.fromisoformat(data["end"]),
-                "status": EventStatus(data.get("status", "confirmed")),
+                "status": EventStatus(status_val),
                 "type": EventType(data.get("type", "meeting")),
                 "description": data.get("description"),
                 "location": data.get("location"),

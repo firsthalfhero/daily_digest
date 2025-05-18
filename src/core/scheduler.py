@@ -39,8 +39,8 @@ class DigestScheduler:
         self._recover_job(event)
 
     def _recover_job(self, event):
-        # Basic recovery: log and optionally re-run missed/failed jobs
-        self.logger.info("schedule_recovery_attempt", job_id=event.job_id)
+        job_id = getattr(event, "job_id", None) if event else None
+        self.logger.info("schedule_recovery_attempt", job_id=job_id)
         # TODO: Implement more robust recovery logic (e.g., re-queue, alert)
 
     def start(self):

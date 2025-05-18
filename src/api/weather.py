@@ -67,24 +67,20 @@ class WeatherAPI:
                 status_code=429
             )
 
-    def _make_request(
-        self,
-        endpoint: str,
-        params: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+    def _make_request(self, endpoint: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         self._check_rate_limit()
-        url = f"{self.config.weather_api_url.rstrip('/')}/{endpoint.lstrip('/')}"
+        url = f"https://weather.googleapis.com/v1/{endpoint}"
         params = params or {}
         params["key"] = self.config.weather_api_key
+        params["unitsSystem"] = "METRIC"
         try:
-            logger.debug(f"Making request to {endpoint} with params {params}")
+            logger.debug(f"Making request to {url} with params {params}")
             response = self.session.get(
                 url,
                 params=params,
                 timeout=self.timeout
             )
             self._request_count += 1
-            # Try to raise for HTTP error
             try:
                 response.raise_for_status()
             except requests.exceptions.HTTPError as e:
@@ -125,9 +121,9 @@ class WeatherAPI:
             "location.latitude": self.SYDNEY_LAT,
             "location.longitude": self.SYDNEY_LON,
         }
-        return self._make_request("weather:lookup", params)
+        return self._make_request("currentConditions:lookup", params)
 
-    def get_forecast(self, days: int = 3) -> Dict[str, Any]:
+    def get_forecast(self, days: int = 1) -> Dict[str, Any]:
         """Get weather forecast for Sydney using Google Weather API."""
         if not 1 <= days <= 7:
             raise ValueError("Forecast days must be between 1 and 7")
@@ -139,17 +135,8 @@ class WeatherAPI:
         return self._make_request("forecast/days:lookup", params)
 
     def get_weather_alerts(self) -> Dict[str, Any]:
-        """Get weather alerts for Sydney (not directly supported by Google Weather API)."""
-        # Google Weather API does not support alerts endpoint; simulate a call for test compatibility
-        # This will call a non-existent endpoint to trigger error handling in tests
-        try:
-            return self._make_request("alerts", {
-                "location.latitude": self.SYDNEY_LAT,
-                "location.longitude": self.SYDNEY_LON,
-                "key": self.config.weather_api_key,
-            })
-        except WeatherAPIError:
-            return {"alerts": []}
+        # Not supported in Google Weather API (Preview)
+        return {"alerts": []}
 
 class WeatherClient:
     def get_weather(self, location: str):

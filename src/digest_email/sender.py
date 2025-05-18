@@ -1,10 +1,14 @@
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from typing import Optional
+from typing import Optional, List
 from src.utils.config import load_config
 from src.utils.logging import get_logger
 from src.digest_email.template_engine import EmailTemplateEngine
+
+# Deprecated: Old SMTP-based sender
+# class EmailSender:
+#     ...
 
 class EmailSender:
     def __init__(self, config=None, logger=None):
@@ -27,8 +31,12 @@ class EmailSender:
         while attempt < retries:
             try:
                 with smtplib.SMTP(self.config.email.smtp_host, self.config.email.smtp_port) as server:
-                    server.starttls()
-                    server.login(self.config.email.smtp_username, self.config.email.smtp_password)
+                    if (
+                        self.config.email.smtp_username not in [None, '', 'none']
+                        and self.config.email.smtp_password not in [None, '', 'none']
+                    ):
+                        server.starttls()
+                        server.login(self.config.email.smtp_username, self.config.email.smtp_password)
                     server.sendmail(self.config.email.sender_email, recipient, msg.as_string())
                 self.logger.info("email_sent", to=recipient, subject=subject)
                 return True

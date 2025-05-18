@@ -10,7 +10,7 @@
         {% if calendar_events %}
             <ul>
             {% for event in calendar_events %}
-                <li><strong>{{ event.time }}</strong>: {{ event.title }} ({{ event.location }})</li>
+                <li><strong>{{ event.time }}</strong>: {{ event.title }}{% if event.location %} ({{ event.location }}){% endif %}</li>
             {% endfor %}
             </ul>
         {% else %}

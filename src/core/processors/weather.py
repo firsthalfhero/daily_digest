@@ -150,13 +150,16 @@ class WeatherProcessor:
         if current:
             temp = current.temperature_c
             condition = current.condition.value.title()
+            if condition.lower() == "unknown":
+                condition = "unavailable"
             parts.append(f"Currently {condition} at {temp}°C")
         
         # Add daily forecast
         max_temp = daily_forecast.max_temp_c
         min_temp = daily_forecast.min_temp_c
         condition = daily_forecast.condition.value.title()
-        
+        if condition.lower() == "unknown":
+            condition = "unavailable"
         parts.append(
             f"Today will be {condition} with a high of {max_temp}°C "
             f"and a low of {min_temp}°C"
