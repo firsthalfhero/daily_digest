@@ -91,10 +91,18 @@ class MotionClient:
             MotionAPIError: If the request fails
         """
         url = f"{self.config.motion_api_url.rstrip('/')}/{endpoint.lstrip('/')}"
-        
+        self._enforce_rate_limit()
+
+        # Set headers per request type
+        headers = {
+            "X-API-Key": self.config.motion_api_key,
+            "Accept": "application/json",
+        }
+        if method.upper() in ("POST", "PUT", "PATCH"):
+            headers["Content-Type"] = "application/json"
+            headers["Authorization"] = f"Bearer {self.config.motion_api_key}"
+
         try:
-            self._enforce_rate_limit()
-            
             logger.debug(
                 "making_api_request",
                 method=method,
@@ -108,6 +116,7 @@ class MotionClient:
                 url=url,
                 params=params,
                 json=json,
+                headers=headers,  # override session headers
                 timeout=10.0,  # 10 second timeout
             )
             
